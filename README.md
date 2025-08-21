@@ -9,6 +9,11 @@
   </a>
 </p>
 
+# Purpose of fork
+
+Rewrite to use System.Security.Crytography, using Microsoft.IdentityModel and other first party interfaces.
+
+
 # Why
 
 Web push requires that push messages triggered from a backend be done via the
