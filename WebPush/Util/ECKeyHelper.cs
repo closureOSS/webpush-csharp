@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 
@@ -23,6 +24,8 @@ internal static class ECKeyHelper
     public static byte[] GetPublicKey(this ECDsa keypair)
     {
         var ep = keypair.ExportParameters(true);
+        ArgumentNullException.ThrowIfNull(ep.Q.X);
+        ArgumentNullException.ThrowIfNull(ep.Q.Y);
         return [4, .. ep.Q.X, .. ep.Q.Y];
     }
 
@@ -30,6 +33,7 @@ internal static class ECKeyHelper
     public static byte[] GetPrivateKey(this ECDsa keypair)
     {
         var ep = keypair.ExportParameters(true);
+        ArgumentNullException.ThrowIfNull(ep.D);
         return [.. ep.D];
     }
 
@@ -39,5 +43,5 @@ internal static class ECKeyHelper
     public static ECDsa GenerateKeys()
     {
         return ECDsa.Create(ECCurve.NamedCurves.nistP256);
-    }    
+    }
 }

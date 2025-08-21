@@ -15,11 +15,7 @@ public static class VapidHelper
     public static VapidDetails GenerateVapidKeys()
     {
         var keys = ECKeyHelper.GenerateKeys();
-        return new VapidDetails
-        {
-            PublicKey = keys.GetEncodedPublicKey(),
-            PrivateKey = keys.GetEncodedPrivateKey()
-        };
+        return new VapidDetails("", keys.GetEncodedPublicKey(), keys.GetEncodedPrivateKey());
     }
 
     /// <summary>

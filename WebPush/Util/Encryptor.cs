@@ -20,6 +20,8 @@ internal static class Encryptor
 
         using var ephemeralEcdh = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
         var ephemeralKeyParameters = ephemeralEcdh.ExportParameters(false);
+        ArgumentNullException.ThrowIfNull(ephemeralKeyParameters.Q.X);
+        ArgumentNullException.ThrowIfNull(ephemeralKeyParameters.Q.Y);
         var uncompressedEphemeralPublicKey = new byte[65];
         uncompressedEphemeralPublicKey[0] = 0x04;
         Buffer.BlockCopy(ephemeralKeyParameters.Q.X, 0, uncompressedEphemeralPublicKey, 1, 32);
@@ -68,10 +70,10 @@ internal static class Encryptor
         Span<byte> nonce = stackalloc byte[12];
         HKDF.Expand(HashAlgorithmName.SHA256, prk, nonce, Encoding.UTF8.GetBytes("nonce"));
 
-        // DOC: Now we finally have all of the things to do the encryption. 
-        // DOC: The cipher required for Web Push is AES128 using GCM. 
+        // DOC: Now we finally have all of the things to do the encryption.
+        // DOC: The cipher required for Web Push is AES128 using GCM.
         // DOC: We use our content encryption key as the key and the nonce as the initialization vector (IV).
-        // DOC: You can send payloads up to a size of 4078 bytes - 4096 bytes maximum per post, 
+        // DOC: You can send payloads up to a size of 4078 bytes - 4096 bytes maximum per post,
         // DOC: with 16-bytes for encryption information and at least 2 bytes for padding.
 
         // DOC: Create a buffer from our data, in this case a UTF-8 encoded string
@@ -96,7 +98,7 @@ internal static class Encryptor
 
     /// <summary>
     /// Encrypts a byte array using AES with a given key and a new random IV.
-    /// 
+    ///
     /// The Web Push protocol specifies a 16-byte authentication tag.
     /// </summary>
     public static byte[] EncryptMessage(byte[] payload, byte[] key, byte[] iv)
@@ -119,7 +121,7 @@ internal static class Encryptor
 
     /// <summary>
     /// Decrypts a byte array using AES with a given key and IV.
-    /// 
+    ///
     /// ciphertext must contain the tag as the end (last 16 bytes).
     /// </summary>
     public static string DecryptMessage(byte[] payload, byte[] key, byte[] nonce)

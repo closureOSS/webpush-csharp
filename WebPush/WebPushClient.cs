@@ -17,11 +17,11 @@ public class WebPushClient : IWebPushClient
 {
     // default TTL is 4 weeks.
     private const int DefaultTtl = 2419200;
-    private readonly HttpClientHandler _httpClientHandler;
+    private readonly HttpClientHandler? _httpClientHandler;
 
-    private string _gcmApiKey;
-    private HttpClient _httpClient;
-    private VapidDetails _vapidDetails;
+    private string? _gcmApiKey;
+    private HttpClient? _httpClient;
+    private VapidDetails? _vapidDetails;
 
     // Used so we only cleanup internally created http clients
     private bool _isHttpClientInternallyCreated;
@@ -120,8 +120,8 @@ public class WebPushClient : IWebPushClient
     ///     notification.
     /// </param>
     /// <returns>A HttpRequestMessage object that can be sent.</returns>
-    public HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string payload,
-        Dictionary<string, object> options = null)
+    public HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string? payload,
+        Dictionary<string, object>? options = null)
     {
         if (!Uri.IsWellFormedUriString(subscription.Endpoint, UriKind.Absolute))
         {
@@ -187,7 +187,7 @@ public class WebPushClient : IWebPushClient
             }
         }
 
-        string cryptoKeyHeader = null;
+        string? cryptoKeyHeader = null;
         request.Headers.Add("TTL", timeToLive.ToString());
 
         foreach (var header in extraHeaders)
@@ -280,8 +280,8 @@ public class WebPushClient : IWebPushClient
     ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
-    public void SendNotification(PushSubscription subscription, string payload = null,
-        Dictionary<string, object> options = null)
+    public void SendNotification(PushSubscription subscription, string? payload = null,
+        Dictionary<string, object>? options = null)
     {
         SendNotificationAsync(subscription, payload, options).ConfigureAwait(false).GetAwaiter().GetResult();
     }
@@ -324,8 +324,8 @@ public class WebPushClient : IWebPushClient
     ///     notification.
     /// </param>
     /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
-    public async Task SendNotificationAsync(PushSubscription subscription, string payload = null,
-        Dictionary<string, object> options = null, CancellationToken cancellationToken = default)
+    public async Task SendNotificationAsync(PushSubscription subscription, string? payload = null,
+        Dictionary<string, object>? options = null, CancellationToken cancellationToken = default)
     {
         var request = GenerateRequestDetails(subscription, payload, options);
         var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -397,7 +397,7 @@ public class WebPushClient : IWebPushClient
                 break;
         }
 
-        string details = null;
+        string? details = null;
         if (response.Content != null)
         {
             details = await response.Content.ReadAsStringAsync().ConfigureAwait(false);

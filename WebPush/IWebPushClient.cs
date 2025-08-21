@@ -45,8 +45,8 @@ public interface IWebPushClient : IDisposable
     ///     notification.
     /// </param>
     /// <returns>A HttpRequestMessage object that can be sent.</returns>
-    HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string payload,
-        Dictionary<string, object> options = null);
+    HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string? payload,
+        Dictionary<string, object>? options = null);
 
     /// <summary>
     ///     To send a push notification call this method with a subscription, optional payload and any options
@@ -58,8 +58,8 @@ public interface IWebPushClient : IDisposable
     ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
-    void SendNotification(PushSubscription subscription, string payload = null,
-        Dictionary<string, object> options = null);
+    void SendNotification(PushSubscription subscription, string? payload = null,
+        Dictionary<string, object>? options = null);
 
     /// <summary>
     ///     To send a push notification call this method with a subscription, optional payload and any options
@@ -90,8 +90,8 @@ public interface IWebPushClient : IDisposable
     ///     notification.
     /// </param>
     /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
-    Task SendNotificationAsync(PushSubscription subscription, string payload = null,
-        Dictionary<string, object> options = null, CancellationToken cancellationToken=default);
+    Task SendNotificationAsync(PushSubscription subscription, string? payload = null,
+        Dictionary<string, object>? options = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
@@ -102,7 +102,7 @@ public interface IWebPushClient : IDisposable
     /// <param name="vapidDetails">The vapid details for the notification.</param>
     /// <param name="cancellationToken"></param>
     Task SendNotificationAsync(PushSubscription subscription, string payload,
-        VapidDetails vapidDetails, CancellationToken cancellationToken=default);
+        VapidDetails vapidDetails, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
@@ -112,5 +112,5 @@ public interface IWebPushClient : IDisposable
     /// <param name="payload">The payload you wish to send to the user</param>
     /// <param name="gcmApiKey">The GCM API key</param>
     /// <param name="cancellationToken"></param>
-    Task SendNotificationAsync(PushSubscription subscription, string payload, string gcmApiKey, CancellationToken cancellationToken=default);
+    Task SendNotificationAsync(PushSubscription subscription, string payload, string gcmApiKey, CancellationToken cancellationToken = default);
 }

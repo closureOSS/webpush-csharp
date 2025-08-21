@@ -2,10 +2,6 @@
 
 public class PushSubscription
 {
-    public PushSubscription()
-    {
-    }
-
     public PushSubscription(string endpoint, string p256dh, string auth)
     {
         Endpoint = endpoint;
