@@ -1,22 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using WebPush.Model;
 using WebPush.Util;
 
-[assembly: InternalsVisibleTo("WebPush.Test")]
-
 namespace WebPush;
 
 public class WebPushClient : IWebPushClient
 {
-    // default TTL is 4 weeks.
-    private const int DefaultTtl = 2419200;
     private readonly HttpClientHandler? _httpClientHandler;
 
     private string? _gcmApiKey;
@@ -65,15 +60,15 @@ public class WebPushClient : IWebPushClient
     ///     to sendNotification()
     /// </summary>
     /// <param name="gcmApiKey">The API key to send with the GCM request.</param>
-    public void SetGcmApiKey(string gcmApiKey)
+    public void SetGcmApiKey(string? gcmApiKey)
     {
-        if (gcmApiKey == null)
+        if (gcmApiKey is null)
         {
             _gcmApiKey = null;
             return;
         }
 
-        if (string.IsNullOrEmpty(gcmApiKey))
+        if (string.IsNullOrWhiteSpace(gcmApiKey))
         {
             throw new ArgumentException(@"The GCM API Key should be a non-empty string or null.");
         }
@@ -120,9 +115,9 @@ public class WebPushClient : IWebPushClient
     ///     notification.
     /// </param>
     /// <returns>A HttpRequestMessage object that can be sent.</returns>
-    public HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string? payload,
-        Dictionary<string, object>? options = null)
+    public HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string? payload, WebPushOptions? options = null)
     {
+        bool hasCryptoHeaders = false;
         if (!Uri.IsWellFormedUriString(subscription.Endpoint, UriKind.Absolute))
         {
             throw new ArgumentException(@"You must pass in a subscription with at least a valid endpoint");
@@ -137,64 +132,45 @@ public class WebPushClient : IWebPushClient
                 @"To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys.");
         }
 
-        var currentGcmApiKey = _gcmApiKey;
-        var currentVapidDetails = _vapidDetails;
-        var timeToLive = DefaultTtl;
-        var extraHeaders = new Dictionary<string, object>();
-
-        if (options != null)
+        if (options is not null)
         {
-            var validOptionsKeys = new List<string> { "headers", "gcmAPIKey", "vapidDetails", "TTL" };
-            foreach (var key in options.Keys)
+            if (options.GcmApiKey is not null)
             {
-                if (!validOptionsKeys.Contains(key))
+                if (string.IsNullOrWhiteSpace(options.GcmApiKey)) throw new ArgumentException("options.gcmAPIKey must be of type string and not empty");
+            }
+            if (options.Topic is not null)
+            {
+                if (string.IsNullOrWhiteSpace(options.Topic) || options.Topic.Length > 32)
                 {
-                    throw new ArgumentException(key + " is an invalid options. The valid options are" +
-                                                string.Join(",", validOptionsKeys));
+                    throw new ArgumentException("options.topic must be of type string and not empty and use a maximum of 32 characters from the URL or filename-safe Base64 characters set");
                 }
-            }
-
-            if (options.ContainsKey("headers"))
-            {
-                var headers = options["headers"] as Dictionary<string, object>;
-
-                extraHeaders = headers ?? throw new ArgumentException("options.headers must be of type Dictionary<string,object>");
-            }
-
-            if (options.ContainsKey("gcmAPIKey"))
-            {
-                var gcmApiKey = options["gcmAPIKey"] as string;
-
-                currentGcmApiKey = gcmApiKey ?? throw new ArgumentException("options.gcmAPIKey must be of type string");
-            }
-
-            if (options.ContainsKey("vapidDetails"))
-            {
-                var vapidDetails = options["vapidDetails"] as VapidDetails;
-                currentVapidDetails = vapidDetails ?? throw new ArgumentException("options.vapidDetails must be of type VapidDetails");
-            }
-
-            if (options.ContainsKey("TTL"))
-            {
-                var ttl = options["TTL"] as int?;
-                if (ttl == null)
+                if (!Regex.IsMatch(options.Topic, @"^[A-Za-z0-9\-_]+$"))
                 {
-                    throw new ArgumentException("options.TTL must be of type int");
+                    throw new ArgumentException("options.topic uses unsupported characters set, use the URL or filename-safe Base64 characters set");
                 }
-
-                //at this stage ttl cannot be null.
-                timeToLive = (int)ttl;
             }
         }
 
         string? cryptoKeyHeader = null;
-        request.Headers.Add("TTL", timeToLive.ToString());
-
-        foreach (var header in extraHeaders)
+        request.Headers.Add("TTL", (options?.TTL ?? WebPushOptions.DefaultTtl).ToString());
+        if (options?.Topic is not null)
         {
-            request.Headers.Add(header.Key, header.Value.ToString());
+            request.Headers.Add("Topic", options.Topic);
+        }
+        if (options?.Urgency is not null)
+        {
+            request.Headers.Add("Urgency", options.Urgency.Value.ToKebabCaseLower());
         }
 
+        if (options?.ExtraHeaders is not null)
+        {
+            foreach (var header in options.ExtraHeaders)
+            {
+                request.Headers.Add(header.Key, header.Value.ToString());
+            }
+        }
+
+        var contentEncoding = options?.ContentEncoding ?? WebPushOptions.DefaultContentEncoding;
         if (!string.IsNullOrEmpty(payload))
         {
             if (string.IsNullOrEmpty(subscription.P256DH) || string.IsNullOrEmpty(subscription.Auth))
@@ -208,8 +184,11 @@ public class WebPushClient : IWebPushClient
             request.Content = new ByteArrayContent(encryptedPayload.Payload);
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
             request.Content.Headers.ContentLength = encryptedPayload.Payload.Length;
-            request.Content.Headers.ContentEncoding.Add("aesgcm");
-            request.Headers.Add("Encryption", "salt=" + encryptedPayload.Base64EncodeSalt());
+            request.Content.Headers.ContentEncoding.Add(contentEncoding.ToKebabCaseLower());
+            if (hasCryptoHeaders)
+            {
+                request.Headers.Add("Encryption", "salt=" + encryptedPayload.Base64EncodeSalt());
+            }
             cryptoKeyHeader = @"dh=" + encryptedPayload.Base64EncodePublicKey();
         }
         else
@@ -220,36 +199,42 @@ public class WebPushClient : IWebPushClient
 
         var isGcm = subscription.Endpoint.StartsWith(@"https://android.googleapis.com/gcm/send");
         var isFcm = subscription.Endpoint.StartsWith(@"https://fcm.googleapis.com/fcm/send/");
+        var vapidDetails = options?.VapidDetails ?? _vapidDetails;
+        var gcmApiKey = options?.GcmApiKey ?? _gcmApiKey;
 
         if (isGcm)
         {
-            if (!string.IsNullOrEmpty(currentGcmApiKey))
+            if (!string.IsNullOrEmpty(gcmApiKey))
             {
-                request.Headers.TryAddWithoutValidation("Authorization", "key=" + currentGcmApiKey);
+                request.Headers.TryAddWithoutValidation("Authorization", $"key={gcmApiKey}");
             }
         }
-        else if (currentVapidDetails != null)
+        else if (vapidDetails is not null)
         {
             var uri = new Uri(subscription.Endpoint);
             var audience = uri.Scheme + @"://" + uri.Host;
-            var vapidHeaders = VapidHelper.GetVapidHeaders(audience, currentVapidDetails.Subject,
-                currentVapidDetails.PublicKey, currentVapidDetails.PrivateKey, currentVapidDetails.Expiration);
+            var vapidHeaders = VapidHelper.GetVapidHeaders(audience, vapidDetails.Subject, vapidDetails.PublicKey, vapidDetails.PrivateKey, vapidDetails.Expiration, contentEncoding);
             request.Headers.Add(@"Authorization", vapidHeaders["Authorization"]);
-            if (string.IsNullOrEmpty(cryptoKeyHeader))
+            if (hasCryptoHeaders)
             {
-                cryptoKeyHeader = vapidHeaders["Crypto-Key"];
-            }
-            else
-            {
-                cryptoKeyHeader += @";" + vapidHeaders["Crypto-Key"];
+                if (string.IsNullOrEmpty(cryptoKeyHeader))
+                {
+                    cryptoKeyHeader = vapidHeaders["Crypto-Key"];
+                }
+                else
+                {
+                    cryptoKeyHeader += @";" + vapidHeaders["Crypto-Key"];
+                }
             }
         }
-        else if (isFcm && !string.IsNullOrEmpty(currentGcmApiKey))
+        else if (isFcm && !string.IsNullOrEmpty(gcmApiKey))
         {
-            request.Headers.TryAddWithoutValidation("Authorization", "key=" + currentGcmApiKey);
+            request.Headers.TryAddWithoutValidation("Authorization", $"key={gcmApiKey}");
         }
-
-        request.Headers.Add("Crypto-Key", cryptoKeyHeader);
+        if (hasCryptoHeaders)
+        {
+            request.Headers.Add("Crypto-Key", cryptoKeyHeader);
+        }
         return request;
     }
 
@@ -280,8 +265,7 @@ public class WebPushClient : IWebPushClient
     ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
-    public void SendNotification(PushSubscription subscription, string? payload = null,
-        Dictionary<string, object>? options = null)
+    public void SendNotification(PushSubscription subscription, string? payload = null, WebPushOptions? options = null)
     {
         SendNotificationAsync(subscription, payload, options).ConfigureAwait(false).GetAwaiter().GetResult();
     }
@@ -295,7 +279,7 @@ public class WebPushClient : IWebPushClient
     /// <param name="vapidDetails">The vapid details for the notification.</param>
     public void SendNotification(PushSubscription subscription, string payload, VapidDetails vapidDetails)
     {
-        var options = new Dictionary<string, object> { ["vapidDetails"] = vapidDetails };
+        var options = new WebPushOptions { VapidDetails = vapidDetails, };
         SendNotification(subscription, payload, options);
     }
 
@@ -308,7 +292,7 @@ public class WebPushClient : IWebPushClient
     /// <param name="gcmApiKey">The GCM API key</param>
     public void SendNotification(PushSubscription subscription, string payload, string gcmApiKey)
     {
-        var options = new Dictionary<string, object> { ["gcmAPIKey"] = gcmApiKey };
+        var options = new WebPushOptions { GcmApiKey = gcmApiKey, };
         SendNotification(subscription, payload, options);
     }
 
@@ -324,8 +308,7 @@ public class WebPushClient : IWebPushClient
     ///     notification.
     /// </param>
     /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
-    public async Task SendNotificationAsync(PushSubscription subscription, string? payload = null,
-        Dictionary<string, object>? options = null, CancellationToken cancellationToken = default)
+    public async Task SendNotificationAsync(PushSubscription subscription, string? payload = null, WebPushOptions? options = null, CancellationToken cancellationToken = default)
     {
         var request = GenerateRequestDetails(subscription, payload, options);
         var response = await HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
@@ -341,10 +324,9 @@ public class WebPushClient : IWebPushClient
     /// <param name="payload">The payload you wish to send to the user</param>
     /// <param name="vapidDetails">The vapid details for the notification.</param>
     /// <param name="cancellationToken"></param>
-    public async Task SendNotificationAsync(PushSubscription subscription, string payload,
-        VapidDetails vapidDetails, CancellationToken cancellationToken = default)
+    public async Task SendNotificationAsync(PushSubscription subscription, string payload, VapidDetails vapidDetails, CancellationToken cancellationToken = default)
     {
-        var options = new Dictionary<string, object> { ["vapidDetails"] = vapidDetails };
+        var options = new WebPushOptions { VapidDetails = vapidDetails };
         await SendNotificationAsync(subscription, payload, options, cancellationToken).ConfigureAwait(false);
     }
 
@@ -358,7 +340,7 @@ public class WebPushClient : IWebPushClient
     /// <param name="cancellationToken"></param>
     public async Task SendNotificationAsync(PushSubscription subscription, string payload, string gcmApiKey, CancellationToken cancellationToken = default)
     {
-        var options = new Dictionary<string, object> { ["gcmAPIKey"] = gcmApiKey };
+        var options = new WebPushOptions { GcmApiKey = gcmApiKey };
         await SendNotificationAsync(subscription, payload, options, cancellationToken).ConfigureAwait(false);
     }
 
@@ -376,7 +358,7 @@ public class WebPushClient : IWebPushClient
         }
 
         // Error
-        var responseCodeMessage = @"Received unexpected response code: " + (int)response.StatusCode;
+        var responseCodeMessage = $"Received unexpected response code: {(int)response.StatusCode}";
         switch (response.StatusCode)
         {
             case HttpStatusCode.BadRequest:
@@ -403,9 +385,7 @@ public class WebPushClient : IWebPushClient
             details = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
 
-        var message = string.IsNullOrEmpty(details)
-            ? responseCodeMessage
-            : $"{responseCodeMessage}. Details: {details}";
+        var message = string.IsNullOrEmpty(details) ? responseCodeMessage : $"{responseCodeMessage}. Details: {details}";
 
         throw new WebPushException(message, subscription, response);
     }

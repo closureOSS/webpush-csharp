@@ -28,8 +28,7 @@ public static class VapidHelper
     /// <param name="privateKey">The VAPID private key as a base64 encoded string</param>
     /// <param name="expiration">The expiration of the VAPID JWT.</param>
     /// <returns>A dictionary of header key/value pairs.</returns>
-    public static Dictionary<string, string> GetVapidHeaders(string audience, string subject, string publicKey,
-        string privateKey, DateTime? expiration = null)
+    public static Dictionary<string, string> GetVapidHeaders(string audience, string subject, string publicKey, string privateKey, DateTime? expiration = null, ContentEncoding contentEncoding = ContentEncoding.Aes128gcm)
     {
         ValidateAudience(audience);
         ValidateSubject(subject);
@@ -59,13 +58,19 @@ public static class VapidHelper
             Subject = identity,
             SigningCredentials = new SigningCredentials(new ECDsaSecurityKey(key), SecurityAlgorithms.EcdsaSha256),
         });
-
-        var results = new Dictionary<string, string>
+        return contentEncoding switch
         {
-            {"Authorization", "WebPush " + token}, {"Crypto-Key", "p256ecdsa=" + publicKey}
+            ContentEncoding.Aesgcm => new Dictionary<string, string>
+            {
+                {"Authorization", $"WebPush {token}"},
+                { "Crypto-Key", $"p256ecdsa={publicKey}"}
+            },
+            ContentEncoding.Aes128gcm => new Dictionary<string, string>
+            {
+                {"Authorization", $"vapid t={token}, k={publicKey}"},
+            },
+            _ => throw new Exception("This content encoding is not supported"),
         };
-
-        return results;
     }
 
     public static void ValidateAudience(string audience)

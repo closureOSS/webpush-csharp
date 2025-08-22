@@ -10,12 +10,12 @@ namespace WebPush.Util;
 
 internal static class Encryptor
 {
-
-    public static EncryptionResult Encrypt(string userKey, string userSecret, string payload)
+    public static EncryptionResult Encrypt(string subscriptionPublicKeyBase64, string authSecretBase64, string payload)
     {
-        var clientPublicKey = Base64UrlEncoder.DecodeBytes(userKey);
-        var clientAuthSecret = Base64UrlEncoder.DecodeBytes(userSecret);
+        var subscriptionPublicKey = Base64UrlEncoder.DecodeBytes(subscriptionPublicKeyBase64);
+        var authenticationSecret = Base64UrlEncoder.DecodeBytes(authSecretBase64);
 
+        // see https://datatracker.ietf.org/doc/html/rfc8291
         // See DOC: https://developer.chrome.com/blog/web-push-encryption#deriving_the_encryption_parameters
 
         using var ephemeralEcdh = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
@@ -26,75 +26,86 @@ internal static class Encryptor
         uncompressedEphemeralPublicKey[0] = 0x04;
         Buffer.BlockCopy(ephemeralKeyParameters.Q.X, 0, uncompressedEphemeralPublicKey, 1, 32);
         Buffer.BlockCopy(ephemeralKeyParameters.Q.Y, 0, uncompressedEphemeralPublicKey, 33, 32);
-
-        var userAgentKeyParameters = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256,
-            Q = new ECPoint
-            {
-                X = new byte[32],
-                Y = new byte[32]
-            }
-        };
-        Array.Copy(clientPublicKey, 1, userAgentKeyParameters.Q.X, 0, 32);
-        Array.Copy(clientPublicKey, 33, userAgentKeyParameters.Q.Y, 0, 32);
-        using var userAgentEcdh = ECDiffieHellman.Create(userAgentKeyParameters);
-        // DOC: const serverECDH = crypto.createECDH('prime256v1');
-        // DOC: const serverPublicKey = serverECDH.generateKeys();
-        // DOC: const sharedSecret = serverECDH.computeSecret(clientPublicKey); // Input Keying Material
-        var sharedSecret = ephemeralEcdh.DeriveKeyMaterial(userAgentEcdh.PublicKey);
+        
+        using var userAgentEcdh = CreateWithPublicKey(subscriptionPublicKey);
+        var sharedSecret = ephemeralEcdh.DeriveRawSecretAgreement(userAgentEcdh.PublicKey);
 
         Span<byte> salt = stackalloc byte[16];
         RandomNumberGenerator.Fill(salt);
 
-        // byte[] pseudoRandomKey = ephemeralEcdh.DeriveKeyFromHmac(userAgentEcdh.PublicKey, HashAlgorithmName.SHA256, [.. salt]);
+        // Step 0 PRK_key
+        Span<byte> prkkey = stackalloc byte[32]; // SHA256 output is 32 bytes
+        HKDF.Extract(HashAlgorithmName.SHA256, sharedSecret, authenticationSecret, prkkey);
 
-        // DOC: const authInfo = new Buffer('Content-Encoding: auth\0', 'utf8');
-        var authInfo = Encoding.UTF8.GetBytes("Content-Encoding: auth\0");
-        // DOC: const prk = hkdf(clientAuthSecret, sharedSecret, authInfo, 32);
-        Span<byte> prk = stackalloc byte[32]; // SHA256 output is 32 bytes
-        HKDF.Extract(HashAlgorithmName.SHA256, sharedSecret, salt, prk);
+        // Step 1 IKM
+        byte[] keyInfo = [.. Encoding.UTF8.GetBytes("WebPush: info"), 0x00, .. subscriptionPublicKey, .. uncompressedEphemeralPublicKey];
+        Span<byte> ikm = stackalloc byte[32];
+        HKDF.Expand(HashAlgorithmName.SHA256, prkkey, ikm, keyInfo);
 
-        // byte[] outputKeyMaterial = HKDF.Expand(HashAlgorithmName.SHA256, pseudoRandomKey, 32, Encoding.UTF8.GetBytes("Content-Encoding: auth\0"));
+        // Step 2 PRK
+        Span<byte> prk = stackalloc byte[32];
+        HKDF.Extract(HashAlgorithmName.SHA256, ikm, salt, prk);
 
+        // Step 3 CEK
+        byte[] cekInfo = [.. Encoding.UTF8.GetBytes("Content-Encoding: aes128gcm"), 0x00];
+        Span<byte> cek = stackalloc byte[16];
+        HKDF.Expand(HashAlgorithmName.SHA256, prk, cek, cekInfo);
 
-        // DOC: Derive the Content Encryption Key
-        // DOC: const contentEncryptionKeyInfo = createInfo('aesgcm', clientPublicKey, serverPublicKey);
-        // DOC: const contentEncryptionKey = hkdf(salt, prk, contentEncryptionKeyInfo, 16);
-        Span<byte> key = stackalloc byte[16];
-        HKDF.Expand(HashAlgorithmName.SHA256, prk, key, Encoding.UTF8.GetBytes("aesgcm"));
-
-        // DOC: Derive the Nonce
-        // DOC: const nonceInfo = createInfo('nonce', clientPublicKey, serverPublicKey);
-        // DOC: const nonce = hkdf(salt, prk, nonceInfo, 12);
+        // Step 4 NONCE
+        byte[] nonceInfo = [.. Encoding.UTF8.GetBytes("Content-Encoding: nonce"), 0x00];
         Span<byte> nonce = stackalloc byte[12];
-        HKDF.Expand(HashAlgorithmName.SHA256, prk, nonce, Encoding.UTF8.GetBytes("nonce"));
+        HKDF.Expand(HashAlgorithmName.SHA256, prk, nonce, nonceInfo);
 
-        // DOC: Now we finally have all of the things to do the encryption.
-        // DOC: The cipher required for Web Push is AES128 using GCM.
-        // DOC: We use our content encryption key as the key and the nonce as the initialization vector (IV).
-        // DOC: You can send payloads up to a size of 4078 bytes - 4096 bytes maximum per post,
-        // DOC: with 16-bytes for encryption information and at least 2 bytes for padding.
+        // Step 5 Header
+        var maxContentLength = BitConverter.GetBytes(Convert.ToInt32(4096));
+        if (BitConverter.IsLittleEndian) { Array.Reverse(maxContentLength); }
+        var asPublicLength = Convert.ToByte(uncompressedEphemeralPublicKey.Length);
+        byte[] header = [.. salt, .. maxContentLength, asPublicLength, .. uncompressedEphemeralPublicKey];
 
-        // DOC: Create a buffer from our data, in this case a UTF-8 encoded string
-        // DOC: const plaintext = new Buffer('Push notification payload!', 'utf8');
-        // DOC: const cipher = crypto.createCipheriv('id-aes128-GCM', contentEncryptionKey, nonce);
-        // DOC: const result = cipher.update(Buffer.concat(padding, plaintext));
-        // DOC: cipher.final();
-        // DOC: Append the auth tag to the result - https://nodejs.org/api/crypto.html#crypto_cipher_getauthtag
-        // DOC: return Buffer.concat([result, cipher.getAuthTag()]);
-        var payloadBytes = Encoding.UTF8.GetBytes(payload);
-        var paddedPayload = AddPaddingToInput(payloadBytes);
+        // Step 6 Payload padding
+        byte[] paddedPayload = [.. Encoding.UTF8.GetBytes(payload), 0x02];
 
-        var encryptedData = EncryptMessage(paddedPayload, [.. key], [.. nonce]);
+        // Step 7 Content Encryption
+        var cipherText = EncryptMessage(paddedPayload, [.. cek], [.. nonce]);
+        byte[] encryptedContent = [.. header, .. cipherText];
 
         return new EncryptionResult
         {
             Salt = [.. salt],
-            Payload = encryptedData,
+            Payload = encryptedContent,
             PublicKey = uncompressedEphemeralPublicKey
         };
     }
+
+    public static ECDiffieHellman CreateWithPrivateKey(byte[] privateKey)
+    {
+        var parameters = new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            D = privateKey,
+        };
+        return ECDiffieHellman.Create(parameters);
+    }
+
+    public static ECDiffieHellman CreateWithPublicKey(byte[] publicKey)
+    {
+        var x = new byte[32];
+        var y = new byte[32];
+        Buffer.BlockCopy(publicKey, 1, x, 0, 32);
+        Buffer.BlockCopy(publicKey, 33, y, 0, 32);
+
+        var parameters = new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            Q = new ECPoint
+            {
+                X = x,
+                Y = y
+            }
+        };
+        return ECDiffieHellman.Create(parameters);
+    }
+
 
     /// <summary>
     /// Encrypts a byte array using AES with a given key and a new random IV.
@@ -135,7 +146,7 @@ internal static class Encryptor
         return Encoding.UTF8.GetString(plaintextBytes);
     }
 
-    private static byte[] AddPaddingToInput(byte[] data)
+    public static byte[] AddPaddingToInput(byte[] data)
     {
         var input = new byte[0 + 2 + data.Length];
         Buffer.BlockCopy(ConvertInt(0), 0, input, 0, 2);
@@ -143,7 +154,7 @@ internal static class Encryptor
         return input;
     }
 
-    private static byte[] ConvertInt(int number)
+    public static byte[] ConvertInt(int number)
     {
         var output = BitConverter.GetBytes(Convert.ToUInt16(number));
         if (BitConverter.IsLittleEndian)

@@ -1,7 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RichardSzalay.MockHttp;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -38,25 +37,51 @@ public class WebPushClientTest
     }
 
     [TestMethod]
+    public void TestSetTopic()
+    {
+        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
+        var message = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { Topic = "testtopic" });
+        Assert.AreEqual(@"testtopic", message.Headers.GetValues(@"Topic").First());
+    }
+
+    [TestMethod]
+    public void TestSetTopicFailures()
+    {
+        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { Topic = "failing topic #3" }));
+    }
+
+
+    [TestMethod]
+    public void TestSetUrgency()
+    {
+        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
+        var message = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { Urgency = Urgency.VeryLow });
+        Assert.AreEqual(@"very-low", message.Headers.GetValues(@"Urgency").First());
+    }
+
+    [TestMethod]
+    public void TestSetContentEncoding()
+    {
+        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
+        var messageAes128gcm = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = ContentEncoding.Aes128gcm });
+        Assert.AreEqual(@"aes128gcm", messageAes128gcm.Content.Headers.ContentEncoding.First());
+        var messageAesgcm = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = ContentEncoding.Aesgcm });
+        Assert.AreEqual(@"aesgcm", messageAesgcm.Content.Headers.ContentEncoding.First());
+    }
+
+
+    [TestMethod]
     public void TestGcmApiKeyInOptions()
     {
         var gcmAPIKey = @"teststring";
         var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
 
-        var options = new Dictionary<string, object>();
-        options[@"gcmAPIKey"] = gcmAPIKey;
+        var options = new WebPushOptions { GcmApiKey = gcmAPIKey, };
         var message = client.GenerateRequestDetails(subscription, @"test payload", options);
         var authorizationHeader = message.Headers.GetValues(@"Authorization").First();
 
         Assert.AreEqual("key=" + gcmAPIKey, authorizationHeader);
-
-        // Test previous incorrect casing of gcmAPIKey
-        var options2 = new Dictionary<string, object>();
-        options2[@"gcmApiKey"] = gcmAPIKey;
-        Assert.ThrowsExactly<ArgumentException>(delegate
-        {
-            client.GenerateRequestDetails(subscription, "test payload", options2);
-        });
     }
 
     [TestMethod]
@@ -110,10 +135,11 @@ public class WebPushClientTest
         var subscription = new PushSubscription(TestFirefoxEndpoint, TestPublicKey, TestPrivateKey);
         var message = client.GenerateRequestDetails(subscription, @"test payload");
         var authorizationHeader = message.Headers.GetValues(@"Authorization").First();
-        var cryptoHeader = message.Headers.GetValues(@"Crypto-Key").First();
+        // var cryptoHeader = message.Headers.GetValues(@"Crypto-Key").First();
 
-        Assert.StartsWith(@"WebPush ", authorizationHeader);
-        Assert.Contains(@"p256ecdsa", cryptoHeader);
+        // Assert.StartsWith(@"WebPush ", authorizationHeader);
+        Assert.StartsWith(@"vapid ", authorizationHeader);
+        // Assert.Contains(@"p256ecdsa", cryptoHeader);
     }
 
     [TestMethod]
