@@ -16,19 +16,10 @@ internal static class Encryptor
         var authenticationSecret = Base64UrlEncoder.DecodeBytes(authSecretBase64);
 
         // see https://datatracker.ietf.org/doc/html/rfc8291
-        // See DOC: https://developer.chrome.com/blog/web-push-encryption#deriving_the_encryption_parameters
 
-        using var ephemeralEcdh = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
-        var ephemeralKeyParameters = ephemeralEcdh.ExportParameters(false);
-        ArgumentNullException.ThrowIfNull(ephemeralKeyParameters.Q.X);
-        ArgumentNullException.ThrowIfNull(ephemeralKeyParameters.Q.Y);
-        var uncompressedEphemeralPublicKey = new byte[65];
-        uncompressedEphemeralPublicKey[0] = 0x04;
-        Buffer.BlockCopy(ephemeralKeyParameters.Q.X, 0, uncompressedEphemeralPublicKey, 1, 32);
-        Buffer.BlockCopy(ephemeralKeyParameters.Q.Y, 0, uncompressedEphemeralPublicKey, 33, 32);
-        
-        using var userAgentEcdh = CreateWithPublicKey(subscriptionPublicKey);
-        var sharedSecret = ephemeralEcdh.DeriveRawSecretAgreement(userAgentEcdh.PublicKey);
+        using var ephemeralEcdh = ECKeyHelper.GenerateKeys();
+        var uncompressedEphemeralPublicKey = ephemeralEcdh.GetPublicKey();
+        var sharedSecret = ECKeyHelper.GetECDiffieHellmanSharedKey(ephemeralEcdh.GetPrivateKey(), subscriptionPublicKey);
 
         Span<byte> salt = stackalloc byte[16];
         RandomNumberGenerator.Fill(salt);
@@ -77,36 +68,6 @@ internal static class Encryptor
         };
     }
 
-    public static ECDiffieHellman CreateWithPrivateKey(byte[] privateKey)
-    {
-        var parameters = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256,
-            D = privateKey,
-        };
-        return ECDiffieHellman.Create(parameters);
-    }
-
-    public static ECDiffieHellman CreateWithPublicKey(byte[] publicKey)
-    {
-        var x = new byte[32];
-        var y = new byte[32];
-        Buffer.BlockCopy(publicKey, 1, x, 0, 32);
-        Buffer.BlockCopy(publicKey, 33, y, 0, 32);
-
-        var parameters = new ECParameters
-        {
-            Curve = ECCurve.NamedCurves.nistP256,
-            Q = new ECPoint
-            {
-                X = x,
-                Y = y
-            }
-        };
-        return ECDiffieHellman.Create(parameters);
-    }
-
-
     /// <summary>
     /// Encrypts a byte array using AES with a given key and a new random IV.
     ///
@@ -122,12 +83,7 @@ internal static class Encryptor
             aesGcm.Encrypt(iv, payload, encryptedBytes, tag);
         }
 
-        // The standard requires the encrypted data and tag to be concatenated
-        var output = new byte[encryptedBytes.Length + tag.Length];
-        Buffer.BlockCopy(encryptedBytes, 0, output, 0, encryptedBytes.Length);
-        Buffer.BlockCopy(tag, 0, output, encryptedBytes.Length, tag.Length);
-
-        return output;
+        return [.. encryptedBytes, .. tag];
     }
 
     /// <summary>
@@ -144,23 +100,5 @@ internal static class Encryptor
         var plaintextBytes = new byte[ciphertext.Length];
         aes.Decrypt(nonce, ciphertext, tag, plaintextBytes);
         return Encoding.UTF8.GetString(plaintextBytes);
-    }
-
-    public static byte[] AddPaddingToInput(byte[] data)
-    {
-        var input = new byte[0 + 2 + data.Length];
-        Buffer.BlockCopy(ConvertInt(0), 0, input, 0, 2);
-        Buffer.BlockCopy(data, 0, input, 0 + 2, data.Length);
-        return input;
-    }
-
-    public static byte[] ConvertInt(int number)
-    {
-        var output = BitConverter.GetBytes(Convert.ToUInt16(number));
-        if (BitConverter.IsLittleEndian)
-        {
-            Array.Reverse(output);
-        }
-        return output;
     }
 }

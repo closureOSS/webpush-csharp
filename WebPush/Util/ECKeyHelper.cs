@@ -44,4 +44,36 @@ internal static class ECKeyHelper
     {
         return ECDsa.Create(ECCurve.NamedCurves.nistP256);
     }
+
+    public static byte[] GetECDiffieHellmanSharedKey(byte[] privateKey, byte[] publicKey)
+    {
+        var myKey = CreateWithPrivateKey(privateKey);
+        var otherKey = CreateWithPublicKey(publicKey);
+        return myKey.DeriveRawSecretAgreement(otherKey.PublicKey);
+    }
+
+    internal static ECDiffieHellman CreateWithPrivateKey(byte[] privateKey)
+    {
+        var parameters = new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            D = privateKey,
+        };
+        return ECDiffieHellman.Create(parameters);
+    }
+
+    internal static ECDiffieHellman CreateWithPublicKey(byte[] publicKey)
+    {
+        var parameters = new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            Q = new ECPoint
+            {
+                X = [.. publicKey.Skip(1).Take(32)],
+                Y = [.. publicKey.Skip(33)],
+            }
+        };
+        return ECDiffieHellman.Create(parameters);
+    }
+
 }

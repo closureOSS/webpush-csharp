@@ -1,9 +1,9 @@
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WebPush.Util;
 
 namespace WebPush.Test;
@@ -82,21 +82,38 @@ public class EncryptorTest
 
         //  -- For an application server:
         //   ecdh_secret = ECDH(as_private, ua_public)
-        var asKeyAS = Encryptor.CreateWithPrivateKey(asPrivate);
-        var uaKeyAS = Encryptor.CreateWithPublicKey(uaPublic);
-        var sharedSecretAS = asKeyAS.DeriveRawSecretAgreement(uaKeyAS.PublicKey);
+        // var asKeyAS = Encryptor.CreateWithPrivateKey(asPrivate);
+        // var uaKeyAS = Encryptor.CreateWithPublicKey(uaPublic);
+        // var sharedSecretAS = asKeyAS.DeriveRawSecretAgreement(uaKeyAS.PublicKey);
+        var sharedSecretAS = ECKeyHelper.GetECDiffieHellmanSharedKey(asPrivate, uaPublic);
         var sharedSecretDecodedAS = Base64UrlEncoder.Encode(sharedSecretAS);
 
         // - For a user agent:
         //   ecdh_secret = ECDH(ua_private, as_public)
-        var uaKeyUA = Encryptor.CreateWithPrivateKey(uaPrivate);
-        var asKeyUA = Encryptor.CreateWithPublicKey(asPublic);
-        var sharedSecretUA = uaKeyUA.DeriveRawSecretAgreement(asKeyUA.PublicKey);
+        // var uaKeyUA = Encryptor.CreateWithPrivateKey(uaPrivate);
+        // var asKeyUA = Encryptor.CreateWithPublicKey(asPublic);
+        // var sharedSecretUA = uaKeyUA.DeriveRawSecretAgreement(asKeyUA.PublicKey);
+        var sharedSecretUA = ECKeyHelper.GetECDiffieHellmanSharedKey(uaPrivate, asPublic);
         var sharedSecretDecodedUA = Base64UrlEncoder.Encode(sharedSecretUA);
 
         // EXPECTED ecdh_secret: kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs
         Assert.AreEqual(expectedECDHSecret, sharedSecretDecodedUA);
         Assert.AreEqual(expectedECDHSecret, sharedSecretDecodedAS);
+        Assert.AreEqual(sharedSecretDecodedAS, sharedSecretDecodedUA);
+    }
+
+    [TestMethod]
+    public void TestEphemeralSharedKeyGeneration()
+    {
+        var ephemeralEcdh = ECKeyHelper.GenerateKeys();
+        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcx aOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+        var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
+        var UaPrivate = @"q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94";
+        var uaPrivate = Base64UrlEncoder.DecodeBytes(UaPrivate);
+        var sharedSecretAS = ECKeyHelper.GetECDiffieHellmanSharedKey(ephemeralEcdh.GetPrivateKey(), uaPublic);
+        var sharedSecretDecodedAS = Base64UrlEncoder.Encode(sharedSecretAS);
+        var sharedSecretUA = ECKeyHelper.GetECDiffieHellmanSharedKey(uaPrivate, ephemeralEcdh.GetPublicKey());
+        var sharedSecretDecodedUA = Base64UrlEncoder.Encode(sharedSecretUA);
         Assert.AreEqual(sharedSecretDecodedAS, sharedSecretDecodedUA);
     }
 

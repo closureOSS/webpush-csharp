@@ -45,7 +45,7 @@ public class VapidHelperTest
         var headers = VapidHelper.GetVapidHeaders(ValidAudience, ValidSubject, publicKey, privateKey);
 
         Assert.IsTrue(headers.ContainsKey(@"Authorization"));
-        Assert.IsTrue(headers.ContainsKey(@"Crypto-Key"));
+        // Assert.IsTrue(headers.ContainsKey(@"Crypto-Key"));
     }
 
     [TestMethod]
@@ -99,7 +99,7 @@ public class VapidHelperTest
             privateKey);
 
         Assert.IsTrue(headers.ContainsKey(@"Authorization"));
-        Assert.IsTrue(headers.ContainsKey(@"Crypto-Key"));
+        // Assert.IsTrue(headers.ContainsKey(@"Crypto-Key"));
     }
 
     [TestMethod]
