@@ -8,14 +8,6 @@ namespace WebPush;
 public interface IWebPushClient : IDisposable
 {
     /// <summary>
-    ///     When sending messages to a GCM endpoint you need to set the GCM API key
-    ///     by either calling setGcmApiKey() or passing in the API key as an option
-    ///     to sendNotification()
-    /// </summary>
-    /// <param name="gcmApiKey">The API key to send with the GCM request.</param>
-    void SetGcmApiKey(string gcmApiKey);
-
-    /// <summary>
     ///     When marking requests where you want to define VAPID details, call this method
     ///     before sendNotifications() or pass in the details and options to
     ///     sendNotification.
@@ -40,7 +32,7 @@ public interface IWebPushClient : IDisposable
     /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
     /// <param name="payload">The payload you wish to send to the user</param>
     /// <param name="options">
-    ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
+    ///     Options for the vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
     /// <returns>A HttpRequestMessage object that can be sent.</returns>
@@ -53,7 +45,7 @@ public interface IWebPushClient : IDisposable
     /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
     /// <param name="payload">The payload you wish to send to the user</param>
     /// <param name="options">
-    ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
+    ///     Options for the vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
     void SendNotification(PushSubscription subscription, string? payload = null, WebPushOptions? options = null);
@@ -68,22 +60,13 @@ public interface IWebPushClient : IDisposable
     void SendNotification(PushSubscription subscription, string payload, VapidDetails vapidDetails);
 
     /// <summary>
-    ///     To send a push notification call this method with a subscription, optional payload and any options
-    ///     Will exception if unsuccessful
-    /// </summary>
-    /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
-    /// <param name="payload">The payload you wish to send to the user</param>
-    /// <param name="gcmApiKey">The GCM API key</param>
-    void SendNotification(PushSubscription subscription, string payload, string gcmApiKey);
-
-    /// <summary>
     ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
     ///     Will exception if unsuccessful
     /// </summary>
     /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
     /// <param name="payload">The payload you wish to send to the user</param>
     /// <param name="options">
-    ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
+    ///     Options for the vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
     /// <param name="cancellationToken">The cancellation token to cancel operation.</param>
@@ -99,13 +82,4 @@ public interface IWebPushClient : IDisposable
     /// <param name="cancellationToken"></param>
     Task SendNotificationAsync(PushSubscription subscription, string payload, VapidDetails vapidDetails, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
-    ///     Will exception if unsuccessful
-    /// </summary>
-    /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
-    /// <param name="payload">The payload you wish to send to the user</param>
-    /// <param name="gcmApiKey">The GCM API key</param>
-    /// <param name="cancellationToken"></param>
-    Task SendNotificationAsync(PushSubscription subscription, string payload, string gcmApiKey, CancellationToken cancellationToken = default);
 }

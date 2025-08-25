@@ -11,18 +11,15 @@
 
 # Purpose of fork
 
-Rewrite to use System.Security.Crytography, using Microsoft.IdentityModel and other first party interfaces.
+Support for the "aes128gcm" HTTP Content Coding.
 
+Rewrite using System.Security.Crytography, Microsoft.IdentityModel and other first party interfaces.
 
 # Why
+ 
+To deliver generic events using HTTP Push as outlined in [Generic Event Delivery Using HTTP](https://datatracker.ietf.org/doc/html/rfc8030), backend-triggered push messages must be encrypted. This is accomplished using the [Message Encryption for Web Push](https://datatracker.ietf.org/doc/html/rfc8291) standard, which relies on [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292) for authentication. Furthermore, any data included with the push message must be separately encrypted following the rules of [Encrypted Content-Encoding for HTTP (RFC8188)](https://datatracker.ietf.org/doc/html/rfc8188).
 
-Web push requires that push messages triggered from a backend be done via the
-[Web Push Protocol](https://tools.ietf.org/html/draft-ietf-webpush-protocol)
-and if you want to send data with your push message, you must also encrypt
-that data according to the [Message Encryption for Web Push spec](https://tools.ietf.org/html/draft-ietf-webpush-encryption).
-
-This package makes it easy to send messages and will also handle legacy support
-for browsers relying on GCM for message sending / delivery.
+This package makes it easy to send push notifications from an application server. 
 
 # Install
 
@@ -30,14 +27,9 @@ Installation is simple, just install via NuGet.
 
     Install-Package WebPush
 
-# Demo Project
-
-There is a ASP.NET MVC Core demo project located [here](https://github.com/coryjthompson/WebPushDemo)
-
 # Usage
 
-The common use case for this library is an application server using
-a GCM API key and VAPID keys.
+The common use case for this library is an application server using VAPID keys.
 
 ```csharp
 using WebPush;
@@ -52,13 +44,11 @@ var privateKey = @"mryM-krWj_6IsIMGsd8wNFXGBxnx...............";
 
 var subscription = new PushSubscription(pushEndpoint, p256dh, auth);
 var vapidDetails = new VapidDetails(subject, publicKey, privateKey);
-//var gcmAPIKey = @"[your key here]";
 
 var webPushClient = new WebPushClient();
 try
 {
 	await webPushClient.SendNotificationAsync(subscription, "payload", vapidDetails);
-    //await webPushClient.SendNotificationAsync(subscription, "payload", gcmAPIKey);
 }
 catch (WebPushException exception)
 {
@@ -68,14 +58,16 @@ catch (WebPushException exception)
 
 # API Reference
 
-## SendNotificationAsync(pushSubscription, payload, vapidDetails|gcmAPIKey|options, cancellationToken)
+## SendNotificationAsync(pushSubscription, payload, vapidDetails|options, cancellationToken)
 
 ```csharp
 var subscription = new PushSubscription(pushEndpoint, p256dh, auth);
 
-var options = new Dictionary<string,object>();
-options["vapidDetails"] = new VapidDetails(subject, publicKey, privateKey);
-//options["gcmAPIKey"] = @"[your key here]";
+var options = new WebPushOptions 
+{
+  VapidDetails = new VapidDetails(subject, publicKey, privateKey),
+  Topic = "RTQ.....",
+};
 
 var webPushClient = new WebPushClient();
 try
@@ -89,8 +81,7 @@ catch (WebPushException exception)
 ```
 
 > **Note:** `SendNotificationAsync()` you don't need to define a payload, and this
-method will work without a GCM API Key and / or VAPID keys if the push service
-supports it.
+method will work without a VAPID keys if the push service supports it.
 
 ### Input
 
@@ -113,13 +104,14 @@ have a *keys* object with *p256dh* and *auth* values.
 Options is an optional argument that if defined should be an Dictionary<string,object> containing
 any of the following values defined, although none of them are required.
 
-- **gcmAPIKey** can be a GCM API key to be used for this request and this
-request only. This overrides any API key set via `setGCMAPIKey()`.
-- **vapidDetails** should be a VapidDetails object with *subject*, *publicKey* and
-*privateKey* values defined. These values should follow the [VAPID Spec](https://tools.ietf.org/html/draft-thomson-webpush-vapid).
+- **VapidDetails** should be a VapidDetails object with *subject*, *publicKey* and
+*privateKey* values defined. These values should follow the [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292).
 - **TTL** is a value in seconds that describes how long a push message is
 retained by the push service (by default, four weeks).
-- **headers** is an object with all the extra headers you want to add to the request.
+- **ContentEncoding** Only Aes128gcm is supported
+- **Urgency** [Urgency of notification](https://datatracker.ietf.org/doc/html/rfc8030#section-5.3)
+- **Topic** Replacing messages with a [topic header](https://datatracker.ietf.org/doc/html/rfc8030#section-5.4)
+- **ExtraHeaders** is an object with all the extra headers you want to add to the request.
 
 <hr />
 
@@ -145,25 +137,6 @@ URL Safe Base64 encoded strings.
 > **Note:** You should create these keys once, store them and use them for all
 > future messages you send.
 
-<hr />
-
-## SetGCMAPIKey(apiKey)
-
-```csharp
-webPushClient.SetGCMAPIKey(@"your-gcm-key");
-```
-
-### Input
-
-This method expects the GCM API key that is linked to the `gcm_sender_id ` in
-your web app manifest.
-
-You can use a GCM API Key from the Google Developer Console or the
-*Cloud Messaging* tab under a Firebase Project.
-
-### Returns
-
-None.
 
 <hr />
 
@@ -202,120 +175,5 @@ This method returns a Dictionary<string, string> intented to be headers of a web
 
 <hr />
 
-# Browser Support
-
-<table>
-<thead>
-<tr>
-	<th><strong>Browser</strong></th>
-    <th width="130px"><strong>Push without Payload</strong></th>
-    <th width="130px"><strong>Push with Payload</strong></th>
-    <th width="130px"><strong>VAPID</strong></th>
-    <th><strong>Notes</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-	<td>Chrome</td>
-	<!-- Push without payloads support-->
-   <td>✓ v42+</td>
-   <!-- Push with payload support -->
-   <td>✓ v50+</td>
-   <!-- VAPID Support -->
-   <td>✓ v52+</td>
-   <td>In v51 and less, the `gcm_sender_id` is needed to get a push subscription.</td>
-   </tr>
-
-   <tr>
-   <td>Firefox</td>
-
-   <!-- Push without payloads support-->
-   <td>✓ v44+</td>
-
-   <!-- Push with payload support -->
-   <td>✓ v44+</td>
-
-   <!-- VAPID Support -->
-   <td>✓ v46+</td>
-
-   <td></td>
-   </tr>
-
-   <tr>
-   <td>Opera</td>
-
-   <!-- Push without payloads support-->
-   <td>✓ v39+ Android <strong>*</strong>
-       <br/>
-       <br/>
-       ✓ v42+ Desktop
-</td>
-   <!-- Push with payload support -->
-   <td>✓ v39+ Android <strong>*</strong>
-       <br/>
-       <br/>
-       ✓ v42+ Desktop
-</td>
-
-   <!-- VAPID Support -->
-   <td>✓ v42+ Desktop</td>
-
-   <td>
-   <strong>*</strong> The `gcm_sender_id` is needed to get a push subscription.
-   </td>
-   </tr>
-
-   <tr>
-   <td>Edge</td>
-
-   <!-- Push without payloads support-->
-   <td>✓ v17+</td>
-
-   <!-- Push with payload support -->
-   <td>✓ v17+</td>
-
-   <!-- VAPID Support -->
-   <td>✓ v17+</td>
-
-   <td></td>
-   </tr>
-   <tr>
-   <td>Safari</td>
-
-   <!-- Push without payloads support-->
-   <td>✗</td>
-
-   <!-- Push with payload support -->
-   <td>✗</td>
-
-   <!-- VAPID Support -->
-   <td>✗</td>
-
-   <td></td>
-   </tr>
-
-   <tr>
-   <td>Samsung Internet Browser</td>
-   <!-- Push without payloads support-->
-   <td>✓ v4.0.10-53+</td>
-   <!-- Push with payload support -->
-   <td>✗</td>
-
-   <!-- VAPID Support -->
-   <td>✗</td>
-
-   <td>The `gcm_sender_id` is needed to get a push subscription.</td>
-   </tr>
-  </tbody>
-</table>
-
-# Help
-
-**Service Worker Cookbook**
-
-The [Service Worker Cookbook](https://serviceworke.rs/) is full of Web Push
-examples.
-
 # Credits
 - Ported from https://github.com/web-push-libs/web-push.
-- Original Encryption code from https://github.com/LogicSoftware/WebPushEncryption

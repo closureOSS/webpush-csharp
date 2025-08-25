@@ -75,31 +75,21 @@ public static class VapidHelper
 
     public static void ValidateAudience(string audience)
     {
-        if (string.IsNullOrEmpty(audience))
-        {
-            throw new ArgumentException(@"No audience could be generated for VAPID.");
-        }
-
-        if (audience.Length == 0)
+        if (string.IsNullOrWhiteSpace(audience))
         {
             throw new ArgumentException(
-                @"The audience value must be a string containing the origin of a push service. " + audience);
+                @$"The audience value must be a string containing the origin of a push service: {audience}");
         }
 
         if (!Uri.IsWellFormedUriString(audience, UriKind.Absolute))
         {
-            throw new ArgumentException(@"VAPID audience is not a url.");
+            throw new ArgumentException(@$"VAPID audience is not a url: {audience}");
         }
     }
 
     public static void ValidateSubject(string subject)
     {
-        if (string.IsNullOrEmpty(subject))
-        {
-            throw new ArgumentException(@"A subject is required");
-        }
-
-        if (subject.Length == 0)
+        if (string.IsNullOrWhiteSpace(subject))
         {
             throw new ArgumentException(@"The subject value must be a string containing a url or mailto: address.");
         }
@@ -115,7 +105,7 @@ public static class VapidHelper
 
     public static void ValidatePublicKey(string publicKey)
     {
-        if (string.IsNullOrEmpty(publicKey))
+        if (string.IsNullOrWhiteSpace(publicKey))
         {
             throw new ArgumentException(@"Valid public key not set");
         }
@@ -130,7 +120,7 @@ public static class VapidHelper
 
     public static void ValidatePrivateKey(string privateKey)
     {
-        if (string.IsNullOrEmpty(privateKey))
+        if (string.IsNullOrWhiteSpace(privateKey))
         {
             throw new ArgumentException(@"Valid private key not set");
         }
@@ -147,7 +137,7 @@ public static class VapidHelper
     {
         if (expiration is null || expiration <= DateTime.UtcNow)
         {
-            throw new ArgumentException(@"Vapid expiration must be a unix timestamp in the future");
+            throw new ArgumentException(@"Vapid expiration must be in the future");
         }
     }
 }

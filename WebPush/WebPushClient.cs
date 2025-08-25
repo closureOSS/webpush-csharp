@@ -14,7 +14,6 @@ public class WebPushClient : IWebPushClient
 {
     private readonly HttpClientHandler? _httpClientHandler;
 
-    private string? _gcmApiKey;
     private HttpClient? _httpClient;
     private VapidDetails? _vapidDetails;
 
@@ -40,40 +39,16 @@ public class WebPushClient : IWebPushClient
     {
         get
         {
-            if (_httpClient != null)
+            if (_httpClient is not null)
             {
                 return _httpClient;
             }
 
             _isHttpClientInternallyCreated = true;
-            _httpClient = _httpClientHandler == null
-                ? new HttpClient()
-                : new HttpClient(_httpClientHandler);
+            _httpClient = _httpClientHandler == null ? new HttpClient() : new HttpClient(_httpClientHandler);
 
             return _httpClient;
         }
-    }
-
-    /// <summary>
-    ///     When sending messages to a GCM endpoint you need to set the GCM API key
-    ///     by either calling setGcmApiKey() or passing in the API key as an option
-    ///     to sendNotification()
-    /// </summary>
-    /// <param name="gcmApiKey">The API key to send with the GCM request.</param>
-    public void SetGcmApiKey(string? gcmApiKey)
-    {
-        if (gcmApiKey is null)
-        {
-            _gcmApiKey = null;
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(gcmApiKey))
-        {
-            throw new ArgumentException(@"The GCM API Key should be a non-empty string or null.");
-        }
-
-        _gcmApiKey = gcmApiKey;
     }
 
     /// <summary>
@@ -111,13 +86,12 @@ public class WebPushClient : IWebPushClient
     /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
     /// <param name="payload">The payload you wish to send to the user</param>
     /// <param name="options">
-    ///     Options for the GCM API key and vapid keys can be passed in if they are unique for each
+    ///     Options for the vapid keys can be passed in if they are unique for each
     ///     notification.
     /// </param>
     /// <returns>A HttpRequestMessage object that can be sent.</returns>
     public HttpRequestMessage GenerateRequestDetails(PushSubscription subscription, string? payload, WebPushOptions? options = null)
     {
-        bool hasCryptoHeaders = false;
         if (!Uri.IsWellFormedUriString(subscription.Endpoint, UriKind.Absolute))
         {
             throw new ArgumentException(@"You must pass in a subscription with at least a valid endpoint");
@@ -134,10 +108,6 @@ public class WebPushClient : IWebPushClient
 
         if (options is not null)
         {
-            if (options.GcmApiKey is not null)
-            {
-                if (string.IsNullOrWhiteSpace(options.GcmApiKey)) throw new ArgumentException("options.gcmAPIKey must be of type string and not empty");
-            }
             if (options.Topic is not null)
             {
                 if (string.IsNullOrWhiteSpace(options.Topic) || options.Topic.Length > 32)
@@ -185,7 +155,7 @@ public class WebPushClient : IWebPushClient
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
             request.Content.Headers.ContentLength = encryptedPayload.Payload.Length;
             request.Content.Headers.ContentEncoding.Add(contentEncoding.ToKebabCaseLower());
-            if (hasCryptoHeaders)
+            if (contentEncoding == ContentEncoding.Aesgcm)
             {
                 request.Headers.Add("Encryption", "salt=" + encryptedPayload.Base64EncodeSalt());
             }
@@ -197,25 +167,14 @@ public class WebPushClient : IWebPushClient
             request.Content.Headers.ContentLength = 0;
         }
 
-        var isGcm = subscription.Endpoint.StartsWith(@"https://android.googleapis.com/gcm/send");
-        var isFcm = subscription.Endpoint.StartsWith(@"https://fcm.googleapis.com/fcm/send/");
-        var vapidDetails = options?.VapidDetails ?? _vapidDetails;
-        var gcmApiKey = options?.GcmApiKey ?? _gcmApiKey;
-
-        if (isGcm)
-        {
-            if (!string.IsNullOrEmpty(gcmApiKey))
-            {
-                request.Headers.TryAddWithoutValidation("Authorization", $"key={gcmApiKey}");
-            }
-        }
-        else if (vapidDetails is not null)
+        var vapidDetails = options?.VapidDetails ?? _vapidDetails;       
+        if (vapidDetails is not null)
         {
             var uri = new Uri(subscription.Endpoint);
             var audience = uri.Scheme + @"://" + uri.Host;
             var vapidHeaders = VapidHelper.GetVapidHeaders(audience, vapidDetails.Subject, vapidDetails.PublicKey, vapidDetails.PrivateKey, vapidDetails.Expiration, contentEncoding);
             request.Headers.Add(@"Authorization", vapidHeaders["Authorization"]);
-            if (hasCryptoHeaders)
+            if (contentEncoding == ContentEncoding.Aesgcm)
             {
                 if (string.IsNullOrEmpty(cryptoKeyHeader))
                 {
@@ -227,11 +186,7 @@ public class WebPushClient : IWebPushClient
                 }
             }
         }
-        else if (isFcm && !string.IsNullOrEmpty(gcmApiKey))
-        {
-            request.Headers.TryAddWithoutValidation("Authorization", $"key={gcmApiKey}");
-        }
-        if (hasCryptoHeaders)
+        if (contentEncoding == ContentEncoding.Aesgcm)
         {
             request.Headers.Add("Crypto-Key", cryptoKeyHeader);
         }
@@ -281,21 +236,7 @@ public class WebPushClient : IWebPushClient
     {
         var options = new WebPushOptions { VapidDetails = vapidDetails, };
         SendNotification(subscription, payload, options);
-    }
-
-    /// <summary>
-    ///     To send a push notification call this method with a subscription, optional payload and any options
-    ///     Will exception if unsuccessful
-    /// </summary>
-    /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
-    /// <param name="payload">The payload you wish to send to the user</param>
-    /// <param name="gcmApiKey">The GCM API key</param>
-    public void SendNotification(PushSubscription subscription, string payload, string gcmApiKey)
-    {
-        var options = new WebPushOptions { GcmApiKey = gcmApiKey, };
-        SendNotification(subscription, payload, options);
-    }
-
+    }   
 
     /// <summary>
     ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
@@ -327,20 +268,6 @@ public class WebPushClient : IWebPushClient
     public async Task SendNotificationAsync(PushSubscription subscription, string payload, VapidDetails vapidDetails, CancellationToken cancellationToken = default)
     {
         var options = new WebPushOptions { VapidDetails = vapidDetails };
-        await SendNotificationAsync(subscription, payload, options, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
-    ///     Will exception if unsuccessful
-    /// </summary>
-    /// <param name="subscription">The PushSubscription you wish to send the notification to.</param>
-    /// <param name="payload">The payload you wish to send to the user</param>
-    /// <param name="gcmApiKey">The GCM API key</param>
-    /// <param name="cancellationToken"></param>
-    public async Task SendNotificationAsync(PushSubscription subscription, string payload, string gcmApiKey, CancellationToken cancellationToken = default)
-    {
-        var options = new WebPushOptions { GcmApiKey = gcmApiKey };
         await SendNotificationAsync(subscription, payload, options, cancellationToken).ConfigureAwait(false);
     }
 

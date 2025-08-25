@@ -69,63 +69,7 @@ public class WebPushClientTest
         var messageAesgcm = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = ContentEncoding.Aesgcm });
         Assert.AreEqual(@"aesgcm", messageAesgcm.Content.Headers.ContentEncoding.First());
     }
-
-
-    [TestMethod]
-    public void TestGcmApiKeyInOptions()
-    {
-        var gcmAPIKey = @"teststring";
-        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
-
-        var options = new WebPushOptions { GcmApiKey = gcmAPIKey, };
-        var message = client.GenerateRequestDetails(subscription, @"test payload", options);
-        var authorizationHeader = message.Headers.GetValues(@"Authorization").First();
-
-        Assert.AreEqual("key=" + gcmAPIKey, authorizationHeader);
-    }
-
-    [TestMethod]
-    public void TestSetGcmApiKey()
-    {
-        var gcmAPIKey = @"teststring";
-        client.SetGcmApiKey(gcmAPIKey);
-        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
-        var message = client.GenerateRequestDetails(subscription, @"test payload");
-        var authorizationHeader = message.Headers.GetValues(@"Authorization").First();
-
-        Assert.AreEqual(@"key=" + gcmAPIKey, authorizationHeader);
-    }
-
-    [TestMethod]
-    public void TestSetGCMAPIKeyEmptyString()
-    {
-        Assert.ThrowsExactly<ArgumentException>(delegate
-        { client.SetGcmApiKey(""); });
-    }
-
-    [TestMethod]
-    public void TestSetGcmApiKeyNonGcmPushService()
-    {
-        // Ensure that the API key doesn't get added on a service that doesn't accept it.
-        var gcmAPIKey = @"teststring";
-        client.SetGcmApiKey(gcmAPIKey);
-        var subscription = new PushSubscription(TestFirefoxEndpoint, TestPublicKey, TestPrivateKey);
-        var message = client.GenerateRequestDetails(subscription, @"test payload");
-
-        Assert.IsFalse(message.Headers.TryGetValues(@"Authorization", out var values));
-    }
-
-    [TestMethod]
-    public void TestSetGcmApiKeyNull()
-    {
-        client.SetGcmApiKey(@"somestring");
-        client.SetGcmApiKey(null);
-
-        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
-        var message = client.GenerateRequestDetails(subscription, @"test payload");
-
-        Assert.IsFalse(message.Headers.TryGetValues("Authorization", out var values));
-    }
+   
 
     [TestMethod]
     public void TestSetVapidDetails()
@@ -140,17 +84,6 @@ public class WebPushClientTest
         // Assert.StartsWith(@"WebPush ", authorizationHeader);
         Assert.StartsWith(@"vapid ", authorizationHeader);
         // Assert.Contains(@"p256ecdsa", cryptoHeader);
-    }
-
-    [TestMethod]
-    public void TestFcmAddsAuthorizationHeader()
-    {
-        client.SetGcmApiKey(@"somestring");
-        var subscription = new PushSubscription(TestFcmEndpoint, TestPublicKey, TestPrivateKey);
-        var message = client.GenerateRequestDetails(subscription, @"test payload");
-        var authorizationHeader = message.Headers.GetValues(@"Authorization").First();
-
-        Assert.StartsWith(@"key=", authorizationHeader);
     }
 
     [TestMethod]
