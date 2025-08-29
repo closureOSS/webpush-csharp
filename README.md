@@ -1,8 +1,6 @@
-<h1 align="center">web-push-csharp</h1>
+# WebPush Csharp library
 
-<p align="center">
-  [![Build](https://github.com/RobSlgm/web-push-csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/RobSlgm/web-push-csharp/actions/workflows/dotnet.yml)
-</p>
+[![Build](https://github.com/RobSlgm/web-push-csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/RobSlgm/web-push-csharp/actions/workflows/dotnet.yml)
 
 # Purpose of fork
 
