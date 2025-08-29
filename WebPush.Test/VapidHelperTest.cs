@@ -104,7 +104,7 @@ public class VapidHelperTest
     [TestMethod]
     public void TestGetVapidHeadersPublicKeyInvalidBase64()
     {
-        Assert.ThrowsExactly<CryptographicException>(
+        Assert.Throws<CryptographicException>(
             delegate { VapidHelper.GetVapidHeaders(ValidAudience, ValidSubject, @"BCvKwB2lbVUYMFAaBUygooKheqcEU-GDrVRnu8k33zJCZkNBNqjZj0VdxQ2QIZa4kV5kpX9aAqyBKZHURm6eG1A", TestPrivateKey); });
     }
 
@@ -118,7 +118,7 @@ public class VapidHelperTest
     [TestMethod]
     public void TestGetVapidHeadersPrivateKeyInvalidBase64()
     {
-        Assert.ThrowsExactly<CryptographicException>(
+        Assert.Throws<CryptographicException>(
             delegate { VapidHelper.GetVapidHeaders(ValidAudience, ValidSubject, TestPublicKey, @"WRONGKmLEFIVvPP3cNX9kE0OF6PV9TJQXVbnKU2xEHI"); });
     }
 
