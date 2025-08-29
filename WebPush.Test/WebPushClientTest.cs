@@ -69,7 +69,7 @@ public class WebPushClientTest
         var messageAesgcm = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = ContentEncoding.Aesgcm });
         Assert.AreEqual(@"aesgcm", messageAesgcm.Content.Headers.ContentEncoding.First());
     }
-   
+
 
     [TestMethod]
     public void TestSetVapidDetails()
