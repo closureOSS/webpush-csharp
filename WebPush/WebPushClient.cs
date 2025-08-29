@@ -167,7 +167,7 @@ public class WebPushClient : IWebPushClient
             request.Content.Headers.ContentLength = 0;
         }
 
-        var vapidDetails = options?.VapidDetails ?? _vapidDetails;       
+        var vapidDetails = options?.VapidDetails ?? _vapidDetails;
         if (vapidDetails is not null)
         {
             var uri = new Uri(subscription.Endpoint);
@@ -236,7 +236,7 @@ public class WebPushClient : IWebPushClient
     {
         var options = new WebPushOptions { VapidDetails = vapidDetails, };
         SendNotification(subscription, payload, options);
-    }   
+    }
 
     /// <summary>
     ///     To send a push notification asynchronous call this method with a subscription, optional payload and any options
