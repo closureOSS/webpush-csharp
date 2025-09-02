@@ -57,7 +57,7 @@ jobs:
         run: dotnet test --no-build -c Release --verbosity normal
 
       - name: Publish the package to NUGET
-        run: dotnet nuget push ./artifacts/package/release/*.nupkg --source https://int.nugettest.org --api-key $NUGET_AUTH_TOKEN
+        run: dotnet nuget push ./artifacts/package/release/*.nupkg --source https://api.nuget.org/v3/index.json --api-key $NUGET_AUTH_TOKEN  --skip-duplicate
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
 
