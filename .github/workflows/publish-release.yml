@@ -1,0 +1,129 @@
+name: 🎁 Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - release/*
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: public-release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - uses: dotnet/nbgv@v0.4.2
+        id: nbgv
+        with:
+          setAllVars: true
+
+      - name: Create and push tag
+        run: |
+          echo "${{ steps.nbgv.outputs.SemVer2 }}"
+          git tag "${{ steps.nbgv.outputs.SemVer2 }}"
+          git push origin "${{ steps.nbgv.outputs.SemVer2 }}"
+
+      # Get previous tag of the current release stream (x.y.z) for changelog
+      # HINT: for last tag use .SemVer2 instead filtering all pre-release tags (with hypen)
+      - name: Get Previous Tag
+        id: previous_tag
+        run: |
+          PREV=$(git tag --sort=-creatordate | grep -v -e "-" | head -n 1)
+          echo "${PREV} to ${{ steps.nbgv.outputs.SemVer2 }}"
+          echo "tag=$PREV" >> $GITHUB_OUTPUT
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Test
+        run: dotnet test --no-build -c Release --verbosity normal
+
+      - name: Publish the package to NUGET
+        run: dotnet nuget push ./artifacts/package/release/*.nupkg --source https://int.nugettest.org --api-key $NUGET_AUTH_TOKEN
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          ignorePreReleases: true
+          fromTag: ${{ steps.previous_tag.outputs.tag }}
+          toTag: ${{ steps.nbgv.outputs.SemVer2 }}
+          configurationJson: |
+            {
+              "template": "## What's Changed\n#{{CHANGELOG}}\n\n### 👀 Uncategorized\n#{{UNCATEGORIZED}}\n**Full Changelog**: #{{RELEASE_DIFF}}",
+              "categories": [
+                {
+                    "title": "### Breaking Changes 🛠",
+                    "labels": ["breaking-change"]
+                },
+                {
+                    "title": "### 🎉 Feature",
+                    "labels": ["feat", "feature", "enhancement"]
+                },
+                {
+                    "title": "### 🔒 Security",
+                    "labels": ["security"]
+                },
+                {
+                    "title": "### 🐛 Bug",
+                    "labels": ["fix", "bug"]
+                },
+                {
+                    "title": "### ✅ Testing",
+                    "labels": ["testing"]
+                },
+                {
+                    "title": "### 💬 Other",
+                    "labels": ["other", "chore"]
+                },
+                {
+                    "title": "### 📦 Dependencies",
+                    "labels": ["dependencies", "deps"]
+                }
+              ],
+              "label_extractor": [
+                  {
+                      "method": "regexr",
+                      "pattern": "\\[(.+?)\\].+",
+                      "target": "$1",
+                      "on_property": "title"
+                  }
+              ],
+              "pr_template": "* #{{TITLE}} by @#{{AUTHOR}} in ##{{NUMBER}}"
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.nbgv.outputs.SemVer2 }}
+          tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
+          target_commitish: ${{ github.ref }}
+          # generate_release_notes: true
+          body: ${{steps.github_release.outputs.changelog}}
+          files: ./artifacts/package/release/*.nupkg
+          prerelease: ${{ contains(steps.nbgv.outputs.SemVer2, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
