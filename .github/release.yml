@@ -6,10 +6,10 @@ changelog:
   categories:
     - title: Breaking Changes 🛠
       labels:
-        - Semver-Major
         - breaking-change
     - title: 🎉 Feature
       labels:
+        - feat
         - feature
         - enhancement
       exclude:
@@ -18,27 +18,24 @@ changelog:
     - title: 🐛 Bug
       labels:
         - bug
+        - fix
     - title: 🔥 Remove
       labels:
         - remove
     - title: ♻ Refactoring
       labels:
         - refactoring
+        - chore
     - title: ✅ Testing
       labels:
         - testing
-    - title: 💚 CI/CD
-      labels:
-        - CI/CD
     - title: ⬆ Dependencies
       labels:
         - dependencies
+        - deps
     - title: 🔒 Security
       labels:
         - security
-    - title: 🛠 Development
-      labels:
-        - development
     - title: 📝 Documentation
       labels:
         - documentation

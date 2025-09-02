@@ -62,12 +62,12 @@ public static class VapidHelper
         {
             ContentEncoding.Aesgcm => new Dictionary<string, string>
             {
-                {"Authorization", $"WebPush {token}"},
+                { "Authorization", $"WebPush {token}"},
                 { "Crypto-Key", $"p256ecdsa={publicKey}"}
             },
             ContentEncoding.Aes128gcm => new Dictionary<string, string>
             {
-                {"Authorization", $"vapid t={token}, k={publicKey}"},
+                { "Authorization", $"vapid t={token}, k={publicKey}"},
             },
             _ => throw new Exception("This content encoding is not supported"),
         };

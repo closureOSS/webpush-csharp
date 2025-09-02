@@ -1,24 +1,27 @@
 # WebPush Csharp library
 
-[![Build](https://github.com/RobSlgm/web-push-csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/RobSlgm/web-push-csharp/actions/workflows/dotnet.yml)
+[![Build](https://github.com/closureOSS/webpush-csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/closureOSS/webpush-csharp/actions/workflows/dotnet.yml)
 
-# Purpose of fork
+# Why
+
+To deliver generic events using HTTP Push as outlined in [Generic Event Delivery Using HTTP](https://datatracker.ietf.org/doc/html/rfc8030), backend-triggered push messages must be encrypted. This is accomplished using the [Message Encryption for Web Push](https://datatracker.ietf.org/doc/html/rfc8291) standard, which relies on [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292) for authentication. Furthermore, any data included with the push message must be separately encrypted following the rules of [Encrypted Content-Encoding for HTTP (RFC8188)](https://datatracker.ietf.org/doc/html/rfc8188).
+
+This package makes it easy to send push notifications from an application server.
+
+## Purpose of fork
 
 Support for the "aes128gcm" HTTP Content Coding.
 
 Rewrite using System.Security.Crytography, Microsoft.IdentityModel and other first party interfaces.
 
-# Why
- 
-To deliver generic events using HTTP Push as outlined in [Generic Event Delivery Using HTTP](https://datatracker.ietf.org/doc/html/rfc8030), backend-triggered push messages must be encrypted. This is accomplished using the [Message Encryption for Web Push](https://datatracker.ietf.org/doc/html/rfc8291) standard, which relies on [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292) for authentication. Furthermore, any data included with the push message must be separately encrypted following the rules of [Encrypted Content-Encoding for HTTP (RFC8188)](https://datatracker.ietf.org/doc/html/rfc8188).
-
-This package makes it easy to send push notifications from an application server. 
 
 # Install
 
-Installation is simple, just install via NuGet.
+Installation is simple, just install via
 
-    Install-Package WebPush
+~~~shell
+dotnet add package ClosureOSS.WebPush
+~~~
 
 # Usage
 
@@ -56,7 +59,7 @@ catch (WebPushException exception)
 ```csharp
 var subscription = new PushSubscription(pushEndpoint, p256dh, auth);
 
-var options = new WebPushOptions 
+var options = new WebPushOptions
 {
   VapidDetails = new VapidDetails(subject, publicKey, privateKey),
   Topic = "RTQ.....",
@@ -111,7 +114,7 @@ retained by the push service (by default, four weeks).
 ## GenerateVapidKeys()
 
 ```csharp
-VapidDetails vapidKeys = VapidHelper.GenerateVapidKeys();
+var vapidKeys = VapidHelper.GenerateVapidKeys();
 
 // Prints 2 URL Safe Base64 Encoded Strings
 Console.WriteLine("Public {0}", vapidKeys.PublicKey);
@@ -161,10 +164,9 @@ The `GetVapidHeaders()` method expects the following input:
 
 ### Returns
 
-This method returns a Dictionary<string, string> intented to be headers of a web request. It will contain the following keys:
+This method returns a Dictionary<string, string> intented to be headers of a web request. It will contain the following key(s):
 
 - *Authorization*
-- *Crypto-Key*.
 
 <hr />
 

@@ -3,10 +3,10 @@ name: 🏭 Build
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
@@ -14,8 +14,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.x
@@ -28,3 +30,10 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build -c Release --verbosity normal
+
+      - name: Upload Nuget package as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NugetPackage
+          path: /home/runner/work/webpush-csharp/webpush-csharp/artifacts/package/release/*.nupkg
+          retention-days: 1
