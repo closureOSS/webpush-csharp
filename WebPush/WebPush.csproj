@@ -1,29 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <IsPackable>true</IsPackable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Cory Thompson, Robert Bill</Authors>
         <Company />
         <Product />
         <Description>Web Push library for C#</Description>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
         <PackageId>ClosureOSS.WebPush</PackageId>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/closureOSS/webpush-csharp</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/closureOSS/webpush-csharp</RepositoryUrl>
         <PackageTags>webpush notifications vapid</PackageTags>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageProjectUrl>https://github.com/closureOSS/webpush-csharp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/closureOSS/webpush-csharp</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
     </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
-    </ItemGroup>
+    <PropertyGroup Condition="'$(Configuration)'!='Debug'">
+        <DeterministicSourcePaths>true</DeterministicSourcePaths>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
+    </PropertyGroup>
     <ItemGroup>
         <None Include="../LICENSE" Pack="true" PackagePath="" />
         <None Include="../README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
     </ItemGroup>
 </Project>

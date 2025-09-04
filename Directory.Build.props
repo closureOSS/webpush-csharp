@@ -8,11 +8,7 @@
     </ItemGroup>
     <PropertyGroup>
         <UseArtifactsOutput>true</UseArtifactsOutput>
-    </PropertyGroup>
-    <PropertyGroup>
-        <Deterministic>true</Deterministic>
-        <DeterministicSourcePaths>true</DeterministicSourcePaths>
-         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
 </Project>
