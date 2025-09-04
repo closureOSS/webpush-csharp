@@ -1,3 +1,4 @@
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 name: 🏭 Build
 
 on:
@@ -21,9 +22,16 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.x
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - uses: dotnet/nbgv@v0.4.2
+        id: nbgv
+        with:
+          setAllVars: true
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore --locked-mode
 
       - name: Build
         run: dotnet build --no-restore -c Release
@@ -34,6 +42,6 @@ jobs:
       - name: Upload Nuget package as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NugetPackage
-          path: /home/runner/work/webpush-csharp/webpush-csharp/artifacts/package/release/*.nupkg
+          name: ClosureOSS.WebPush.${{ steps.nbgv.outputs.NuGetPackageVersion }}
+          path: ./artifacts/package/release/*nupkg
           retention-days: 1

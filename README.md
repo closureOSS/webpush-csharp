@@ -14,14 +14,16 @@ Support for the "aes128gcm" HTTP Content Coding.
 
 Rewrite using System.Security.Crytography, Microsoft.IdentityModel and other first party interfaces.
 
+> [!CAUTION]
+> This project is a re-implementation of the relevant RFCs. Please note that it is not compatible with the existing public API and does not support the older standards.
 
 # Install
 
 Installation is simple, just install via
 
-~~~shell
+```shell
 dotnet add package ClosureOSS.WebPush
-~~~
+```
 
 # Usage
 
@@ -76,34 +78,33 @@ catch (WebPushException exception)
 }
 ```
 
-> **Note:** `SendNotificationAsync()` you don't need to define a payload, and this
-method will work without a VAPID keys if the push service supports it.
+> [!NOTE]
+> `SendNotificationAsync()` you don't need to define a payload, and this method will work without a VAPID keys if the push service supports it.
 
 ### Input
 
 **Push Subscription**
 
-The first argument must be an PushSubscription object containing the details for a push
-subscription.
+The first argument must be an PushSubscription object containing the details for a push subscription.
 
 **Payload**
 
 The payload is optional, but if set, will be the data sent with a push
 message.
 
-This must be a *string*
-> **Note:** In order to encrypt the *payload*, the *pushSubscription* **must**
-have a *keys* object with *p256dh* and *auth* values.
+This must be a _string_
+
+> **Note:** In order to encrypt the _payload_, the _pushSubscription_ **must**
+> have a _keys_ object with _p256dh_ and _auth_ values.
 
 **Options**
 
-Options is an optional argument that if defined should be an Dictionary<string,object> containing
-any of the following values defined, although none of them are required.
+Options is an optional argument that if defined should be an Dictionary<string,object> containing any of the following values defined, although none of them are required.
 
-- **VapidDetails** should be a VapidDetails object with *subject*, *publicKey* and
-*privateKey* values defined. These values should follow the [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292).
+- **VapidDetails** should be a VapidDetails object with _subject_, _publicKey_ and
+  _privateKey_ values defined. These values should follow the [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292).
 - **TTL** is a value in seconds that describes how long a push message is
-retained by the push service (by default, four weeks).
+  retained by the push service (by default, four weeks).
 - **ContentEncoding** Only Aes128gcm is supported
 - **Urgency** [Urgency of notification](https://datatracker.ietf.org/doc/html/rfc8030#section-5.3)
 - **Topic** Replacing messages with a [topic header](https://datatracker.ietf.org/doc/html/rfc8030#section-5.4)
@@ -127,14 +128,12 @@ None.
 
 ### Returns
 
-Returns a VapidDetails object with **PublicKey** and **PrivateKey** values populated which are
-URL Safe Base64 encoded strings.
+Returns a VapidDetails object with **PublicKey** and **PrivateKey** values populated which are URL Safe Base64 encoded strings.
 
-> **Note:** You should create these keys once, store them and use them for all
-> future messages you send.
+> [!NOTE]
+> You should create these keys once, store them and use them for all future messages you send.
 
-
-<hr />
+---
 
 ## GetVapidHeaders(audience, subject, publicKey, privateKey, expiration)
 
@@ -150,25 +149,26 @@ Dictionary<string, string> vapidHeaders = VapidHelper.GetVapidHeaders(
 );
 ```
 
-The *GetVapidHeaders()* method will take in the values needed to create
-an Authorization and Crypto-Key header.
+The _GetVapidHeaders()_ method will take in the values needed to create an Authorization and Crypto-Key header.
 
 ### Input
 
 The `GetVapidHeaders()` method expects the following input:
 
-- *audience*: the origin of the **push service**.
-- *subject*: the mailto or URL for your application.
-- *publicKey*: the VAPID public key.
-- *privateKey*: the VAPID private key.
+- _audience_: the origin of the **push service**.
+- _subject_: the mailto or URL for your application.
+- _publicKey_: the VAPID public key.
+- _privateKey_: the VAPID private key.
 
 ### Returns
 
 This method returns a Dictionary<string, string> intented to be headers of a web request. It will contain the following key(s):
 
-- *Authorization*
+- _Authorization_
 
-<hr />
+---
 
 # Credits
-- Ported from https://github.com/web-push-libs/web-push.
+
+- [C# Sharp original library ](https://github.com/web-push-libs/web-push-csharp)
+- Original library ported from https://github.com/web-push-libs/web-push.
