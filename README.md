@@ -1,6 +1,8 @@
 # WebPush Csharp library
 
 [![Build](https://github.com/closureOSS/webpush-csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/closureOSS/webpush-csharp/actions/workflows/dotnet.yml)
+![NuGet Version](https://img.shields.io/nuget/vpre/ClosureOSS.Calendare.VSyntaxReader)
+
 
 # Why
 
