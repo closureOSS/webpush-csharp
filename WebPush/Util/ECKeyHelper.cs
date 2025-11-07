@@ -23,17 +23,16 @@ internal static class ECKeyHelper
 
     public static byte[] GetPublicKey(this ECDsa keypair)
     {
-        var ep = keypair.ExportParameters(true);
-        ArgumentNullException.ThrowIfNull(ep.Q.X);
-        ArgumentNullException.ThrowIfNull(ep.Q.Y);
+        var ep = keypair.ExportParameters(includePrivateParameters: true);
+        if (ep.Q.X is null || ep.Q.Y is null) throw new InvalidOperationException();
         return [4, .. ep.Q.X, .. ep.Q.Y];
     }
 
 
     public static byte[] GetPrivateKey(this ECDsa keypair)
     {
-        var ep = keypair.ExportParameters(true);
-        ArgumentNullException.ThrowIfNull(ep.D);
+        var ep = keypair.ExportParameters(includePrivateParameters: true);
+        if (ep.D is null) throw new InvalidOperationException();
         return [.. ep.D];
     }
 
@@ -71,7 +70,7 @@ internal static class ECKeyHelper
             {
                 X = [.. publicKey.Skip(1).Take(32)],
                 Y = [.. publicKey.Skip(33)],
-            }
+            },
         };
         return ECDiffieHellman.Create(parameters);
     }

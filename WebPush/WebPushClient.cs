@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -10,7 +11,7 @@ using WebPush.Util;
 
 namespace WebPush;
 
-public class WebPushClient : IWebPushClient
+public partial class WebPushClient : IWebPushClient
 {
     private readonly HttpClientHandler? _httpClientHandler;
 
@@ -94,7 +95,7 @@ public class WebPushClient : IWebPushClient
     {
         if (!Uri.IsWellFormedUriString(subscription.Endpoint, UriKind.Absolute))
         {
-            throw new ArgumentException(@"You must pass in a subscription with at least a valid endpoint");
+            throw new ArgumentException(@"You must pass in a subscription with at least a valid endpoint", nameof(subscription));
         }
 
         var request = new HttpRequestMessage(HttpMethod.Post, subscription.Endpoint);
@@ -103,7 +104,7 @@ public class WebPushClient : IWebPushClient
                                                string.IsNullOrEmpty(subscription.P256DH)))
         {
             throw new ArgumentException(
-                @"To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys.");
+                @"To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys.", nameof(subscription));
         }
 
         if (options is not null)
@@ -112,17 +113,17 @@ public class WebPushClient : IWebPushClient
             {
                 if (string.IsNullOrWhiteSpace(options.Topic) || options.Topic.Length > 32)
                 {
-                    throw new ArgumentException("options.topic must be of type string and not empty and use a maximum of 32 characters from the URL or filename-safe Base64 characters set");
+                    throw new ArgumentException("options.topic must be of type string and not empty and use a maximum of 32 characters from the URL or filename-safe Base64 characters set", nameof(options));
                 }
-                if (!Regex.IsMatch(options.Topic, @"^[A-Za-z0-9\-_]+$"))
+                if (!RegexVariableName().IsMatch(options.Topic))
                 {
-                    throw new ArgumentException("options.topic uses unsupported characters set, use the URL or filename-safe Base64 characters set");
+                    throw new ArgumentException("options.topic uses unsupported characters set, use the URL or filename-safe Base64 characters set", nameof(options));
                 }
             }
         }
 
         string? cryptoKeyHeader = null;
-        request.Headers.Add("TTL", (options?.TTL ?? WebPushOptions.DefaultTtl).ToString());
+        request.Headers.Add("TTL", (options?.TTL ?? WebPushOptions.DefaultTtl).ToString(CultureInfo.InvariantCulture));
         if (options?.Topic is not null)
         {
             request.Headers.Add("Topic", options.Topic);
@@ -146,7 +147,7 @@ public class WebPushClient : IWebPushClient
             if (string.IsNullOrEmpty(subscription.P256DH) || string.IsNullOrEmpty(subscription.Auth))
             {
                 throw new ArgumentException(
-                    @"Unable to send a message with payload to this subscription since it doesn't have the required encryption key");
+                    @"Unable to send a message with payload to this subscription since it doesn't have the required encryption key", nameof(subscription));
             }
 
             var encryptedPayload = EncryptPayload(subscription, payload);
@@ -325,4 +326,7 @@ public class WebPushClient : IWebPushClient
             _httpClient = null;
         }
     }
+
+    [GeneratedRegex(@"^[A-Za-z0-9\-_]+$", RegexOptions.None, matchTimeoutMilliseconds: 100)]
+    private static partial Regex RegexVariableName();
 }

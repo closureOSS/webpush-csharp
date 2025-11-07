@@ -25,8 +25,8 @@ public class VapidHelperTest
         var publicKey = Base64UrlEncoder.DecodeBytes(keys.PublicKey);
         var privateKey = Base64UrlEncoder.DecodeBytes(keys.PrivateKey);
 
-        Assert.AreEqual(32, privateKey.Length);
-        Assert.AreEqual(65, publicKey.Length);
+        Assert.HasCount(32, privateKey);
+        Assert.HasCount(65, publicKey);
     }
 
     [TestMethod]
@@ -187,7 +187,7 @@ public class VapidHelperTest
         var token = jwkPart["t=".Length..];
         var tokenParts = token.Split('.');
 
-        Assert.AreEqual(3, tokenParts.Length);
+        Assert.HasCount(3, tokenParts);
 
         var encodedHeader = tokenParts[0];
         var encodedPayload = tokenParts[1];

@@ -48,7 +48,7 @@ public static class VapidHelper
         var identity = new ClaimsIdentity([new Claim(JwtRegisteredClaimNames.Sub, subject)]);
         var handler = new JsonWebTokenHandler
         {
-            SetDefaultTimesOnTokenCreation = false
+            SetDefaultTimesOnTokenCreation = false,
         };
         string token = handler.CreateToken(new SecurityTokenDescriptor
         {
@@ -60,12 +60,12 @@ public static class VapidHelper
         });
         return contentEncoding switch
         {
-            ContentEncoding.Aesgcm => new Dictionary<string, string>
+            ContentEncoding.Aesgcm => new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 { "Authorization", $"WebPush {token}"},
-                { "Crypto-Key", $"p256ecdsa={publicKey}"}
+                { "Crypto-Key", $"p256ecdsa={publicKey}"},
             },
-            ContentEncoding.Aes128gcm => new Dictionary<string, string>
+            ContentEncoding.Aes128gcm => new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 { "Authorization", $"vapid t={token}, k={publicKey}"},
             },
@@ -78,12 +78,12 @@ public static class VapidHelper
         if (string.IsNullOrWhiteSpace(audience))
         {
             throw new ArgumentException(
-                @$"The audience value must be a string containing the origin of a push service: {audience}");
+                @$"The audience value must be a string containing the origin of a push service: {audience}", nameof(audience));
         }
 
         if (!Uri.IsWellFormedUriString(audience, UriKind.Absolute))
         {
-            throw new ArgumentException(@$"VAPID audience is not a url: {audience}");
+            throw new ArgumentException(@$"VAPID audience is not a url: {audience}", nameof(audience));
         }
     }
 
@@ -91,14 +91,14 @@ public static class VapidHelper
     {
         if (string.IsNullOrWhiteSpace(subject))
         {
-            throw new ArgumentException(@"The subject value must be a string containing a url or mailto: address.");
+            throw new ArgumentException(@"The subject value must be a string containing a url or mailto: address.", nameof(subject));
         }
 
-        if (!subject.StartsWith("mailto:"))
+        if (!subject.StartsWith("mailto:", StringComparison.Ordinal))
         {
             if (!Uri.IsWellFormedUriString(subject, UriKind.Absolute))
             {
-                throw new ArgumentException(@"Subject is not a valid URL or mailto address");
+                throw new ArgumentException(@"Subject is not a valid URL or mailto address", nameof(subject));
             }
         }
     }
@@ -107,14 +107,14 @@ public static class VapidHelper
     {
         if (string.IsNullOrWhiteSpace(publicKey))
         {
-            throw new ArgumentException(@"Valid public key not set");
+            throw new ArgumentException(@"Valid public key not set", nameof(publicKey));
         }
 
         var decodedPublicKey = Base64UrlEncoder.DecodeBytes(publicKey);
 
         if (decodedPublicKey.Length != 65)
         {
-            throw new ArgumentException(@"Vapid public key must be 65 characters long when decoded");
+            throw new ArgumentException(@"Vapid public key must be 65 characters long when decoded", nameof(publicKey));
         }
     }
 
@@ -122,14 +122,14 @@ public static class VapidHelper
     {
         if (string.IsNullOrWhiteSpace(privateKey))
         {
-            throw new ArgumentException(@"Valid private key not set");
+            throw new ArgumentException(@"Valid private key not set", nameof(privateKey));
         }
 
         var decodedPrivateKey = Base64UrlEncoder.DecodeBytes(privateKey);
 
         if (decodedPrivateKey.Length != 32)
         {
-            throw new ArgumentException(@"Vapid private key should be 32 bytes long when decoded.");
+            throw new ArgumentException(@"Vapid private key should be 32 bytes long when decoded.", nameof(privateKey));
         }
     }
 
@@ -137,7 +137,7 @@ public static class VapidHelper
     {
         if (expiration is null || expiration <= DateTime.UtcNow)
         {
-            throw new ArgumentException(@"Vapid expiration must be in the future");
+            throw new ArgumentException(@"Vapid expiration must be in the future", nameof(expiration));
         }
     }
 }
