@@ -142,3 +142,17 @@ end_of_line = crlf
 [*.test]
 trim_trailing_whitespace = false
 # end_of_line = crlf
+
+[*.cs]
+# ConfigureAwait()
+dotnet_diagnostic.MA0004.severity = none
+# Collection abstraction instead of implementation
+dotnet_diagnostic.MA0016.severity = none
+# TODO
+dotnet_diagnostic.MA0026.severity = none
+# Filename must match type
+dotnet_diagnostic.MA0048.severity = none
+# Method too long
+dotnet_diagnostic.MA0051.severity = none
+# Avoid comparison with bool constant
+dotnet_diagnostic.MA0073.severity = none

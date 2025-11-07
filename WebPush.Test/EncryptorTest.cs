@@ -27,9 +27,9 @@ public class EncryptorTest
         var subscription = new PushSubscription(TestFirefoxEndpoint, TestPublicKey, TestPrivateKey);
         var encrypted = Encryptor.Encrypt(subscription.P256DH, subscription.Auth, TestPayload);
 
-        Assert.AreEqual(16, encrypted.Salt.Length);
-        Assert.AreEqual(65, encrypted.PublicKey.Length);
-        Assert.AreEqual(115, encrypted.Payload.Length);
+        Assert.HasCount(16, encrypted.Salt);
+        Assert.HasCount(65, encrypted.PublicKey);
+        Assert.HasCount(115, encrypted.Payload);
     }
 
 

@@ -40,7 +40,7 @@ public class JWSSignerTest
         });
         var tokenParts = token.Split('.');
 
-        Assert.AreEqual(3, tokenParts.Length);
+        Assert.HasCount(3, tokenParts);
 
         var encodedHeader = tokenParts[0];
         var encodedPayload = tokenParts[1];
