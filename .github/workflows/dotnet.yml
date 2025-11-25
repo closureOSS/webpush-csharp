@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 9.x
+          dotnet-version: 10.x
           cache: true
           cache-dependency-path: "**/packages.lock.json"
 
@@ -40,7 +40,7 @@ jobs:
         run: dotnet test --no-build -c Release --verbosity normal
 
       - name: Upload Nuget package as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ClosureOSS.WebPush.${{ steps.nbgv.outputs.NuGetPackageVersion }}
           path: ./artifacts/package/release/*nupkg
