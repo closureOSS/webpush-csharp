@@ -1,11 +1,11 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Authors>Cory Thompson, Robert Bill</Authors>
         <Company />
         <Product />
         <Description>Web Push library for C#</Description>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFrameworks>net10.0;net9.0</TargetFrameworks>
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup>
@@ -32,14 +32,14 @@
         <None Include="../README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Meziantou.Analyzer" Version="2.0.250" Condition="'$(Configuration)' == 'Debug'">
+        <PackageReference Include="Meziantou.Analyzer" Version="2.0.256" Condition="'$(Configuration)' == 'Debug'">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
-        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.15.0" />
     </ItemGroup>
 </Project>
