@@ -17,7 +17,7 @@ Support for the "aes128gcm" HTTP Content Coding.
 Rewrite using System.Security.Crytography, Microsoft.IdentityModel and other first party interfaces.
 
 > [!CAUTION]
-> This project is a re-implementation of the relevant RFCs. Please note that it is not compatible with the existing public API and does not support the older standards.
+> This project is a re-implementation of the relevant RFCs. Please note that it is not compatible with the existing public API and does not support older standards.
 
 # Install
 
