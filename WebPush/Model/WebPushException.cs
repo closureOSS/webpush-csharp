@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
-namespace WebPush;
+namespace WebPush.Model;
 
 public class WebPushException : Exception
 {

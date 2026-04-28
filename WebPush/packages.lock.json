@@ -2,12 +2,6 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
-      "Meziantou.Analyzer": {
-        "type": "Direct",
-        "requested": "[3.0.56, )",
-        "resolved": "3.0.56",
-        "contentHash": "kh6dGYKqDkkcrqBFzsd/DWa6thojGSA3+7Ngoft5rkew4+Wyn0WB8K5qqR4IN2y5Jz60230mQpx25X83qBUllA=="
-      },
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "Direct",
         "requested": "[10.0.7, )",
@@ -36,6 +30,12 @@
           "Microsoft.IdentityModel.Logging": "8.17.0"
         }
       },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[10.0.7, )",
+        "resolved": "10.0.7",
+        "contentHash": "AA/yhzFHNtQZXLdqjzujPy25G8EWwGWsAnxOE2zYSBoT/8QHP6ketN3CToD3DFreO653ipUwnKHo22B8AlBMCw=="
+      },
       "Nerdbank.GitVersioning": {
         "type": "Direct",
         "requested": "[3.9.50, )",
@@ -62,12 +62,6 @@
       }
     },
     "net9.0": {
-      "Meziantou.Analyzer": {
-        "type": "Direct",
-        "requested": "[3.0.56, )",
-        "resolved": "3.0.56",
-        "contentHash": "kh6dGYKqDkkcrqBFzsd/DWa6thojGSA3+7Ngoft5rkew4+Wyn0WB8K5qqR4IN2y5Jz60230mQpx25X83qBUllA=="
-      },
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "Direct",
         "requested": "[10.0.7, )",
@@ -96,6 +90,12 @@
           "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
           "Microsoft.IdentityModel.Logging": "8.17.0"
         }
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[9.0.15, )",
+        "resolved": "9.0.15",
+        "contentHash": "EejcbfCMR77Dthy77qxRbEShmzLApHZUPqXMBVQK+A0pNrRThkaHoGGMGvbq/gTkC/waKcDEgjBkbaejB58Wtw=="
       },
       "Nerdbank.GitVersioning": {
         "type": "Direct",

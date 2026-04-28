@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using WebPush.Model;
 using WebPush.Util;
 
 namespace WebPush;

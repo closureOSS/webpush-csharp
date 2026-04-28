@@ -11,6 +11,7 @@
     <PropertyGroup>
         <PackageId>ClosureOSS.WebPush</PackageId>
         <IsPackable>true</IsPackable>
+        <IsAotCompatible>true</IsAotCompatible>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
