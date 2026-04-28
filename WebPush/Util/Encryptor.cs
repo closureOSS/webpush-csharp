@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using WebPush.Model;
 
 [assembly: InternalsVisibleTo("WebPush.Test")]
 

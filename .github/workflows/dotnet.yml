@@ -25,7 +25,7 @@ jobs:
           cache: true
           cache-dependency-path: "**/packages.lock.json"
 
-      - uses: dotnet/nbgv@v0.4.2
+      - uses: dotnet/nbgv@v0.5.1
         id: nbgv
         with:
           setAllVars: true
@@ -40,7 +40,7 @@ jobs:
         run: dotnet test --no-build -c Release --verbosity normal
 
       - name: Upload Nuget package as Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ClosureOSS.WebPush.${{ steps.nbgv.outputs.NuGetPackageVersion }}
           path: ./artifacts/package/release/*nupkg

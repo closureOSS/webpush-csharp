@@ -1,9 +1,9 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RichardSzalay.MockHttp;
-using System;
+﻿using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RichardSzalay.MockHttp;
 using WebPush.Model;
 
 namespace WebPush.Test;

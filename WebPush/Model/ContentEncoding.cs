@@ -1,4 +1,4 @@
-namespace WebPush;
+﻿namespace WebPush;
 
 public enum ContentEncoding
 {

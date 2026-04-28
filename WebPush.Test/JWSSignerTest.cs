@@ -1,10 +1,10 @@
-﻿using System.Text;
+﻿using System;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WebPush.Util;
-using Microsoft.IdentityModel.JsonWebTokens;
-using System;
-using System.Security.Claims;
 
 namespace WebPush.Test;
 
