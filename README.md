@@ -3,7 +3,6 @@
 [![Build](https://github.com/closureOSS/webpush-csharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/closureOSS/webpush-csharp/actions/workflows/dotnet.yml)
 ![NuGet Version](https://img.shields.io/nuget/v/ClosureOSS.WebPush)
 
-
 # Why
 
 To deliver generic events using HTTP Push as outlined in [Generic Event Delivery Using HTTP](https://datatracker.ietf.org/doc/html/rfc8030), backend-triggered push messages must be encrypted. This is accomplished using the [Message Encryption for Web Push](https://datatracker.ietf.org/doc/html/rfc8291) standard, which relies on [Voluntary Application Server Identification (VAPID) for Web Push (RFC8292)](https://datatracker.ietf.org/doc/html/rfc8292) for authentication. Furthermore, any data included with the push message must be separately encrypted following the rules of [Encrypted Content-Encoding for HTTP (RFC8188)](https://datatracker.ietf.org/doc/html/rfc8188).
@@ -11,6 +10,8 @@ To deliver generic events using HTTP Push as outlined in [Generic Event Delivery
 This package makes it easy to send push notifications from an application server.
 
 ## Purpose of fork
+
+Support for message topic and message urgency flag.
 
 Support for the "aes128gcm" HTTP Content Coding.
 
@@ -43,12 +44,17 @@ var publicKey = @"BDjASz8kkVBQJgWcD05uX3VxIs_gSHyuS023jnBoHBgUbg8zIJvTSQytR8MP4Z
 var privateKey = @"mryM-krWj_6IsIMGsd8wNFXGBxnx...............";
 
 var subscription = new PushSubscription(pushEndpoint, p256dh, auth);
-var vapidDetails = new VapidDetails(subject, publicKey, privateKey);
+var options = new WebPushOptions
+{
+  VapidDetails = new VapidDetails(subject, publicKey, privateKey),
+  ContentEncoding = ContentEncoding.Aes128gcm,
+  Urgency = Urgency.High,
+};
 
 var webPushClient = new WebPushClient();
 try
 {
-	await webPushClient.SendNotificationAsync(subscription, "payload", vapidDetails);
+	await webPushClient.SendNotificationAsync(subscription, "payload", options);
 }
 catch (WebPushException exception)
 {
@@ -114,14 +120,43 @@ Options is an optional argument that if defined should be an Dictionary<string,o
 
 <hr />
 
-## GenerateVapidKeys()
+## GenerateRequestDetails(pushSubscription, payload, options)
+
+Generates a Http message without sending. Parameters have the same meaning as with `SendNotificationAsync`.
+
+See [standalone example](Examples/WebPushMessage.cs).
 
 ```csharp
 var vapidKeys = VapidHelper.GenerateVapidKeys();
+vapidKeys.Subject = @"mailto:user@example.net";
+var p256dh = @"BI...MHM";
+var auth = @"eSZ...Q";
+var webPushClient = new WebPushClient();
+var subscription = new PushSubscription("https://server.example.com/notify/Avv3mSO...", p256dh, auth);
+var options = new WebPushOptions
+{
+    VapidDetails = vapidKeys,
+    Topic = "Example",
+};
+```
 
-// Prints 2 URL Safe Base64 Encoded Strings
-Console.WriteLine("Public {0}", vapidKeys.PublicKey);
-Console.WriteLine("Private {0}", vapidKeys.PrivateKey);
+<hr />
+
+## GenerateVapidKeys()
+
+See [standalone example](Examples/VapidKeys.cs).
+
+```csharp
+var vapidKeys = VapidHelper.GenerateVapidKeys();
+Console.WriteLine($"Public key:  {vapidKeys.PublicKey}");
+Console.WriteLine($"Private key: {vapidKeys.PrivateKey}");
+```
+
+outputs for example:
+
+```text
+Public key:  BFu5Jx7eA285mMZRx7a-SuFH8Cc2mAMZ5RhbqvGJKAIqRT6VzRc4Y5x7uuBD2AVkeLn13MrQZKHHUV6QDL8arGM
+Private key: 5aRRAbKkELlCDlhEO68GItWm9ux2hS7ORP2KmQVHxAI
 ```
 
 ### Input
@@ -139,6 +174,8 @@ Returns a VapidDetails object with **PublicKey** and **PrivateKey** values popul
 
 ## GetVapidHeaders(audience, subject, publicKey, privateKey, expiration)
 
+See [standalone example](Examples/VapidHeaders.cs).
+
 ```csharp
 Uri uri = new Uri(subscription.Endpoint);
 string audience = uri.Scheme + Uri.SchemeDelimiter + uri.Host;
@@ -147,7 +184,9 @@ Dictionary<string, string> vapidHeaders = VapidHelper.GetVapidHeaders(
   audience,
   @"mailto: example@example.com",
   publicKey,
-  privateKey
+  privateKey,
+  DateTime.Now.AddDays(2),
+  ContentEncoding.Aes128gcm
 );
 ```
 
@@ -162,11 +201,14 @@ The `GetVapidHeaders()` method expects the following input:
 - _publicKey_: the VAPID public key.
 - _privateKey_: the VAPID private key.
 
+and optionally
+
+- _expiration_: Expiration date (defaults to 12 hours from now)
+- _contentEncoding_: Either Aes128gcm (default) or Aesgcm
+
 ### Returns
 
-This method returns a Dictionary<string, string> intented to be headers of a web request. It will contain the following key(s):
-
-- _Authorization_
+This method returns a Dictionary<string, string> intented to be headers of a web request. It will contain the `Authorization` header and for Aes128 additionally a `Crypto-Key` header.
 
 ---
 

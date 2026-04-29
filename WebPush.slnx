@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WebPush.Test/WebPush.Test.csproj" />
+  <Project Path="WebPush/WebPush.csproj" />
+</Solution>
