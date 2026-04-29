@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 
 namespace WebPush.Model;
 
-public class WebPushException : Exception
+public sealed class WebPushException : Exception
 {
     public WebPushException(string message, PushSubscription pushSubscription, HttpResponseMessage responseMessage) : base(message)
     {

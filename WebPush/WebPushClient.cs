@@ -105,7 +105,7 @@ public partial class WebPushClient : IWebPushClient
                                                string.IsNullOrEmpty(subscription.P256DH)))
         {
             throw new ArgumentException(
-                @"To send a message with a payload, the subscription must have 'auth' and 'p256dh' keys.", nameof(subscription));
+               @"Unable to send a message with payload to this subscription since it doesn't have the required encryption key", nameof(subscription));
         }
 
         if (options is not null)
@@ -145,12 +145,6 @@ public partial class WebPushClient : IWebPushClient
         var contentEncoding = options?.ContentEncoding ?? WebPushOptions.DefaultContentEncoding;
         if (!string.IsNullOrEmpty(payload))
         {
-            if (string.IsNullOrEmpty(subscription.P256DH) || string.IsNullOrEmpty(subscription.Auth))
-            {
-                throw new ArgumentException(
-                    @"Unable to send a message with payload to this subscription since it doesn't have the required encryption key", nameof(subscription));
-            }
-
             var encryptedPayload = EncryptPayload(subscription, payload);
 
             request.Content = new ByteArrayContent(encryptedPayload.Payload);
@@ -174,7 +168,7 @@ public partial class WebPushClient : IWebPushClient
         {
             var uri = new Uri(subscription.Endpoint);
             var audience = uri.Scheme + @"://" + uri.Host;
-            var vapidHeaders = VapidHelper.GetVapidHeaders(audience, vapidDetails.Subject, vapidDetails.PublicKey, vapidDetails.PrivateKey, vapidDetails.Expiration, contentEncoding);
+            var vapidHeaders = VapidHelper.GetVapidHeaders(audience, vapidDetails, contentEncoding);
             request.Headers.Add(@"Authorization", vapidHeaders["Authorization"]);
             if (contentEncoding == ContentEncoding.Aesgcm)
             {

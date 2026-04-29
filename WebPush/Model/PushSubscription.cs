@@ -1,6 +1,6 @@
 ﻿namespace WebPush;
 
-public class PushSubscription
+public sealed class PushSubscription
 {
     public PushSubscription(string endpoint, string p256dh, string auth)
     {

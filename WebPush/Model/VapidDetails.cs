@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace WebPush;
 
-public class VapidDetails
+public sealed class VapidDetails
 {
     /// <param name="subject">This should be a URL or a 'mailto:' email address</param>
     /// <param name="publicKey">The VAPID public key as a base64 encoded string</param>

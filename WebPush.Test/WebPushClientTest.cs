@@ -37,6 +37,29 @@ public class WebPushClientTest
     }
 
     [TestMethod]
+    public void TestBogusEndpoint()
+    {
+        var subscription = new PushSubscription("this is not a valid endpoint", TestPublicKey, TestPrivateKey);
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload"));
+    }
+
+
+    [TestMethod]
+    public void TestMissingAuth()
+    {
+        var subscription = new PushSubscription(TestFcmEndpoint, TestPublicKey, string.Empty);
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload"));
+    }
+
+    [TestMethod]
+    public void TestMissingP256DH()
+    {
+        var subscription = new PushSubscription(TestFcmEndpoint, string.Empty, TestPrivateKey);
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload"));
+    }
+
+
+    [TestMethod]
     public void TestSetTopic()
     {
         var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
