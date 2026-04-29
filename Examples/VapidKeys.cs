@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env dotnet
-#:package ClosureOSS.WebPush@2.4.1
+#:package ClosureOSS.WebPush@2.5.1
 using WebPush;
 
 var vapidKeys = VapidHelper.GenerateVapidKeys();
