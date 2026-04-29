@@ -68,7 +68,7 @@ public class EncryptorTest
     [TestMethod]
     public void TestSharedKeyGeneration()
     {
-        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcx aOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
         var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
         var UaPrivate = @"q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94";
         var uaPrivate = Base64UrlEncoder.DecodeBytes(UaPrivate);
@@ -106,7 +106,7 @@ public class EncryptorTest
     public void TestEphemeralSharedKeyGeneration()
     {
         var ephemeralEcdh = ECKeyHelper.GenerateKeys();
-        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcx aOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
         var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
         var UaPrivate = @"q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94";
         var uaPrivate = Base64UrlEncoder.DecodeBytes(UaPrivate);
@@ -142,7 +142,7 @@ public class EncryptorTest
         //  key_info = "WebPush: info" || 0x00 || ua_public || as_public
         //  IKM = HMAC-SHA-256(PRK_key, key_info || 0x01)
 
-        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcx aOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+        var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
         var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
         var AsPublic = @"BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
         var asPublic = Base64UrlEncoder.DecodeBytes(AsPublic);
