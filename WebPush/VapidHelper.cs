@@ -23,10 +23,24 @@ public static class VapidHelper
     ///     header to be added to a Web Push Protocol Request.
     /// </summary>
     /// <param name="audience">This must be the origin of the push service.</param>
+    /// <param name="vapid">The VAPID details</param>
+    /// <param name="contentEncoding">The content encoding (defaults to Aes128gcm)</param>
+    /// <returns>A dictionary of header key/value pairs.</returns>
+    public static Dictionary<string, string> GetVapidHeaders(string audience, VapidDetails vapid, ContentEncoding contentEncoding = ContentEncoding.Aes128gcm)
+    {
+        return GetVapidHeaders(audience, vapid.Subject, vapid.PublicKey, vapid.PrivateKey, vapid.Expiration, contentEncoding);
+    }
+
+    /// <summary>
+    ///     This method takes the required VAPID parameters and returns the required
+    ///     header to be added to a Web Push Protocol Request.
+    /// </summary>
+    /// <param name="audience">This must be the origin of the push service.</param>
     /// <param name="subject">This should be a URL or a 'mailto:' email address</param>
     /// <param name="publicKey">The VAPID public key as a base64 encoded string</param>
     /// <param name="privateKey">The VAPID private key as a base64 encoded string</param>
     /// <param name="expiration">The expiration of the VAPID JWT.</param>
+    /// <param name="contentEncoding">The content encoding (defaults to Aes128gcm)</param>
     /// <returns>A dictionary of header key/value pairs.</returns>
     public static Dictionary<string, string> GetVapidHeaders(string audience, string subject, string publicKey, string privateKey, DateTime? expiration = null, ContentEncoding contentEncoding = ContentEncoding.Aes128gcm)
     {

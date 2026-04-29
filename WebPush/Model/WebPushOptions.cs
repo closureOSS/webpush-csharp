@@ -2,7 +2,7 @@
 
 namespace WebPush;
 
-public class WebPushOptions
+public sealed class WebPushOptions
 {
     public VapidDetails? VapidDetails { get; set; }
     public const int DefaultTtl = 2419200; // default is 4 weeks

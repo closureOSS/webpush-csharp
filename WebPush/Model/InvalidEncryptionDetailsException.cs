@@ -2,7 +2,7 @@
 
 namespace WebPush.Model;
 
-public class InvalidEncryptionDetailsException : Exception
+public sealed class InvalidEncryptionDetailsException : Exception
 {
     public InvalidEncryptionDetailsException(string message, PushSubscription pushSubscription)
         : base(message)

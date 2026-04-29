@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace WebPush.Util;
 
-public static partial class EnumHelper
+internal static partial class EnumHelper
 {
 
     public static string ToKebabCaseLower<T>(this T val) where T : Enum

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -37,6 +38,35 @@ public class WebPushClientTest
     }
 
     [TestMethod]
+    public void TestBogusEndpoint()
+    {
+        var subscription = new PushSubscription("this is not a valid endpoint", TestPublicKey, TestPrivateKey);
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload"));
+    }
+
+
+    [TestMethod]
+    [DataRow(TestPublicKey, "")]
+    [DataRow("", TestPrivateKey)]
+    [DataRow("", "")]
+    public void TestMissingAuthWithPayload(string publicKey, string privateKey)
+    {
+        var subscription = new PushSubscription(TestFcmEndpoint, publicKey, privateKey);
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload"));
+    }
+
+    [TestMethod]
+    [DataRow(TestPublicKey, "")]
+    [DataRow("", TestPrivateKey)]
+    [DataRow("", "")]
+    public void TestMissingAuthWithoutPayload(string publicKey, string privateKey)
+    {
+        var subscription = new PushSubscription(TestFcmEndpoint, publicKey, privateKey);
+        var message = client.GenerateRequestDetails(subscription, null);
+        Assert.IsNotNull(message);
+    }
+
+    [TestMethod]
     public void TestSetTopic()
     {
         var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
@@ -45,11 +75,27 @@ public class WebPushClientTest
     }
 
     [TestMethod]
-    public void TestSetTopicFailures()
+    [DataRow("failing topic #3")]
+    [DataRow("")]
+    [DataRow("a123456789012345678901234567890toolong")]
+    public void TestSetTopicFailures(string topic)
     {
         var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
-        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { Topic = "failing topic #3" }));
+        Assert.ThrowsExactly<ArgumentException>(() => client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { Topic = topic, }));
     }
+
+    [TestMethod]
+    public void TestExtraHeaders()
+    {
+        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
+        Dictionary<string, object> extraHeaders = [];
+        extraHeaders["DEBUG-VERBOSE"] = true;
+        var message = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ExtraHeaders = extraHeaders, });
+        var checkHeader = message.Headers.GetValues(@"DEBUG-VERBOSE").First();
+        Assert.IsNotNull(checkHeader);
+        Assert.AreEqual(@"True", checkHeader);
+    }
+
 
 
     [TestMethod]
@@ -61,14 +107,28 @@ public class WebPushClientTest
     }
 
     [TestMethod]
-    public void TestSetContentEncoding()
+    [DataRow(ContentEncoding.Aes128gcm, "aes128gcm")]
+    [DataRow(ContentEncoding.Aesgcm, "aesgcm")]
+    public void TestSetContentEncoding(ContentEncoding encoding, string encodingHeaderValue)
     {
         var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
-        var messageAes128gcm = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = ContentEncoding.Aes128gcm });
-        Assert.AreEqual(@"aes128gcm", messageAes128gcm.Content.Headers.ContentEncoding.First());
-        var messageAesgcm = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = ContentEncoding.Aesgcm });
-        Assert.AreEqual(@"aesgcm", messageAesgcm.Content.Headers.ContentEncoding.First());
+        var message = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = encoding, });
+        Assert.AreEqual(encodingHeaderValue, message.Content.Headers.ContentEncoding.First());
     }
+
+    [TestMethod]
+    [DataRow(ContentEncoding.Aes128gcm, "aes128gcm")]
+    [DataRow(ContentEncoding.Aesgcm, "aesgcm")]
+    public void TestSetContentEncodingWithVapid(ContentEncoding encoding, string encodingHeaderValue)
+    {
+        client.SetVapidDetails(TestSubject, TestPublicKey, TestPrivateKey);
+        var subscription = new PushSubscription(TestGcmEndpoint, TestPublicKey, TestPrivateKey);
+        var message = client.GenerateRequestDetails(subscription, @"test payload", new WebPushOptions { ContentEncoding = encoding, });
+        Assert.AreEqual(encodingHeaderValue, message.Content.Headers.ContentEncoding.First());
+        // var authorizationHeader = message.Headers.GetValues(@"Authorization").First();
+        // Assert.StartsWith(@"vapid ", authorizationHeader);
+    }
+
 
 
     [TestMethod]

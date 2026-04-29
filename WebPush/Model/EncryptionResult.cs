@@ -2,9 +2,7 @@
 
 namespace WebPush.Model;
 
-// @LogicSoftware
-// Originally From: https://github.com/LogicSoftware/WebPushEncryption/blob/master/src/EncryptionResult.cs
-public class EncryptionResult
+public sealed class EncryptionResult
 {
     public required byte[] PublicKey { get; set; }
     public required byte[] Payload { get; set; }
