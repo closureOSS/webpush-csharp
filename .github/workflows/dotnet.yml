@@ -1,13 +1,21 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-name: 🏭 Build
+name: 🏭 Build nuget
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
   pull_request:
     branches:
       - main
+
+env:
+  DOTNET_VERSION: "10.x"
+
+permissions:
+  contents: write
+  pull-requests: read
 
 jobs:
   build:
@@ -21,17 +29,21 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.x
+          dotnet-version: ${{ env.DOTNET_VERSION }}
           cache: true
           cache-dependency-path: "**/packages.lock.json"
 
-      - uses: dotnet/nbgv@v0.5.1
-        id: nbgv
-        with:
-          setAllVars: true
-
       - name: Restore dependencies
         run: dotnet restore --locked-mode
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+        with:
+          updateProjectFiles: true
 
       - name: Build
         run: dotnet build --no-restore -c Release
@@ -42,6 +54,6 @@ jobs:
       - name: Upload Nuget package as Artifact
         uses: actions/upload-artifact@v6
         with:
-          name: ClosureOSS.WebPush.${{ steps.nbgv.outputs.NuGetPackageVersion }}
+          name: ClosureOSS.WebPush.${{ steps.gitversion.outputs.FullSemVer }}
           path: ./artifacts/package/release/*nupkg
           retention-days: 1
