@@ -2,6 +2,12 @@
   "version": 1,
   "dependencies": {
     "net10.0": {
+      "GitVersion.MsBuild": {
+        "type": "Direct",
+        "requested": "[6.7.0, )",
+        "resolved": "6.7.0",
+        "contentHash": "0W5NHnfnogX0pfidRcJfqzfb8Yc/avBfq1qVuaHiHIjbtsjKHt9IFtt18p/ttCCeJlJe9fQliQ3pSkZQcibXlw=="
+      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.5.1, )",
@@ -40,12 +46,6 @@
         "dependencies": {
           "MSTest.Analyzers": "4.2.1"
         }
-      },
-      "Nerdbank.GitVersioning": {
-        "type": "Direct",
-        "requested": "[3.9.50, )",
-        "resolved": "3.9.50",
-        "contentHash": "HtOgGF6jZ+WYbXnCUCYPT8Y2d6mIJo9ozjK/FINTRsXdm4Zgv9GehUMa7EFoGQkqrMcDJNOIDwCmENnvXg4UbA=="
       },
       "RichardSzalay.MockHttp": {
         "type": "Direct",
@@ -194,6 +194,12 @@
       }
     },
     "net8.0": {
+      "GitVersion.MsBuild": {
+        "type": "Direct",
+        "requested": "[6.7.0, )",
+        "resolved": "6.7.0",
+        "contentHash": "0W5NHnfnogX0pfidRcJfqzfb8Yc/avBfq1qVuaHiHIjbtsjKHt9IFtt18p/ttCCeJlJe9fQliQ3pSkZQcibXlw=="
+      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.5.1, )",
@@ -232,12 +238,6 @@
         "dependencies": {
           "MSTest.Analyzers": "4.2.1"
         }
-      },
-      "Nerdbank.GitVersioning": {
-        "type": "Direct",
-        "requested": "[3.9.50, )",
-        "resolved": "3.9.50",
-        "contentHash": "HtOgGF6jZ+WYbXnCUCYPT8Y2d6mIJo9ozjK/FINTRsXdm4Zgv9GehUMa7EFoGQkqrMcDJNOIDwCmENnvXg4UbA=="
       },
       "RichardSzalay.MockHttp": {
         "type": "Direct",
@@ -392,6 +392,12 @@
       }
     },
     "net9.0": {
+      "GitVersion.MsBuild": {
+        "type": "Direct",
+        "requested": "[6.7.0, )",
+        "resolved": "6.7.0",
+        "contentHash": "0W5NHnfnogX0pfidRcJfqzfb8Yc/avBfq1qVuaHiHIjbtsjKHt9IFtt18p/ttCCeJlJe9fQliQ3pSkZQcibXlw=="
+      },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
         "requested": "[18.5.1, )",
@@ -430,12 +436,6 @@
         "dependencies": {
           "MSTest.Analyzers": "4.2.1"
         }
-      },
-      "Nerdbank.GitVersioning": {
-        "type": "Direct",
-        "requested": "[3.9.50, )",
-        "resolved": "3.9.50",
-        "contentHash": "HtOgGF6jZ+WYbXnCUCYPT8Y2d6mIJo9ozjK/FINTRsXdm4Zgv9GehUMa7EFoGQkqrMcDJNOIDwCmENnvXg4UbA=="
       },
       "RichardSzalay.MockHttp": {
         "type": "Direct",
