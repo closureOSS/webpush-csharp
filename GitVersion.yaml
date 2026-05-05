@@ -1,5 +1,10 @@
 workflow: GitHubFlow/v1
 mode: ContinuousDelivery
 branches:
+  main:
+    label: "beta"
   feature:
     mode: ContinuousDelivery
+assembly-versioning-format: '{MajorMinorPatch}.{WeightedPreReleaseNumber}'
+assembly-file-versioning-format: '{MajorMinorPatch}.{WeightedPreReleaseNumber}'
+assembly-informational-format: '{MajorMinorPatch}.{WeightedPreReleaseNumber}'
