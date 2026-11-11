@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Linq;
 using System.Security.Cryptography;
-using Microsoft.IdentityModel.Tokens;
 
 namespace WebPush.Util;
 
@@ -36,8 +36,8 @@ internal static class ECKeyHelper
         return [.. ep.D];
     }
 
-    public static string GetEncodedPublicKey(this ECDsa keypair) => Base64UrlEncoder.Encode(keypair.GetPublicKey());
-    public static string GetEncodedPrivateKey(this ECDsa keypair) => Base64UrlEncoder.Encode(keypair.GetPrivateKey());
+    public static string GetEncodedPublicKey(this ECDsa keypair) => Base64Url.EncodeToString(keypair.GetPublicKey());
+    public static string GetEncodedPrivateKey(this ECDsa keypair) => Base64Url.EncodeToString(keypair.GetPrivateKey());
 
     public static ECDsa GenerateKeys()
     {

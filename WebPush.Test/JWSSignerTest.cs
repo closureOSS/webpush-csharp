@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -20,7 +21,7 @@ public class JWSSignerTest
     [TestMethod]
     public void TestGenerateSignature()
     {
-        var key = ECKeyHelper.GetKeyPair(Base64UrlEncoder.DecodeBytes(TestPrivateKey), Base64UrlEncoder.DecodeBytes(TestPublicKey));
+        var key = ECKeyHelper.GetKeyPair(Base64Url.DecodeFromChars(TestPrivateKey), Base64Url.DecodeFromChars(TestPublicKey));
         var handler = new JsonWebTokenHandler
         {
             SetDefaultTimesOnTokenCreation = false
@@ -46,15 +47,15 @@ public class JWSSignerTest
         var encodedPayload = tokenParts[1];
         var signature = tokenParts[2];
 
-        var decodedHeader = Encoding.UTF8.GetString(Base64UrlEncoder.DecodeBytes(encodedHeader));
-        var decodedPayload = Encoding.UTF8.GetString(Base64UrlEncoder.DecodeBytes(encodedPayload));
+        var decodedHeader = Encoding.UTF8.GetString(Base64Url.DecodeFromChars(encodedHeader));
+        var decodedPayload = Encoding.UTF8.GetString(Base64Url.DecodeFromChars(encodedPayload));
 
         Assert.AreEqual(@"{""alg"":""ES256"",""typ"":""JWT""}", decodedHeader);
         Assert.Contains(@"""typ"":""JWT""", decodedHeader);
         Assert.Contains(@"""alg"":""ES256""", decodedHeader);
         Assert.AreEqual(@"{""aud"":""aud"",""exp"":1,""sub"":""subject""}", decodedPayload);
 
-        var decodedSignature = Base64UrlEncoder.DecodeBytes(signature);
+        var decodedSignature = Base64Url.DecodeFromChars(signature);
         var decodedSignatureLength = decodedSignature.Length;
 
         var isSignatureLengthValid = decodedSignatureLength == 66 || decodedSignatureLength == 64;

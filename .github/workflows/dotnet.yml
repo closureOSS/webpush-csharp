@@ -11,7 +11,7 @@ on:
       - main
 
 env:
-  DOTNET_VERSION: "10.x"
+  DOTNET_VERSION: "11.x"
   NUGET_PACKAGE_NAME: "ClosureOSS.WebPush"
 
 permissions:
