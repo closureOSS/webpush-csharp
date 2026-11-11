@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Buffers.Text;
+using System.Linq;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,7 +14,7 @@ public class UrlBase64Test
     public void TestBase64UrlDecode()
     {
         var expected = new byte[3] { 181, 235, 45 };
-        var actual = Base64UrlEncoder.DecodeBytes(@"test");
+        var actual = Base64Url.DecodeFromChars(@"test");
         Assert.IsTrue(actual.SequenceEqual(expected));
     }
 
@@ -21,7 +22,7 @@ public class UrlBase64Test
     public void TestBase64UrlEncode()
     {
         var expected = @"test";
-        var actual = Base64UrlEncoder.Encode([181, 235, 45]);
+        var actual = Base64Url.EncodeToString([181, 235, 45]);
         Assert.AreEqual(expected, actual);
     }
 }

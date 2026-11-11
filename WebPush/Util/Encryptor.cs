@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
 using WebPush.Model;
 
 [assembly: InternalsVisibleTo("WebPush.Test")]
@@ -13,8 +13,8 @@ internal static class Encryptor
 {
     public static EncryptionResult Encrypt(string subscriptionPublicKeyBase64, string authSecretBase64, string payload)
     {
-        var subscriptionPublicKey = Base64UrlEncoder.DecodeBytes(subscriptionPublicKeyBase64);
-        var authenticationSecret = Base64UrlEncoder.DecodeBytes(authSecretBase64);
+        var subscriptionPublicKey = Base64Url.DecodeFromChars(subscriptionPublicKeyBase64);
+        var authenticationSecret = Base64Url.DecodeFromChars(authSecretBase64);
 
         // see https://datatracker.ietf.org/doc/html/rfc8291
 

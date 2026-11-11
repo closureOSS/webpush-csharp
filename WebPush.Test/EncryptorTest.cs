@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -59,24 +60,24 @@ public class EncryptorTest
         var key = ECKeyHelper.GenerateKeys();
 
         var AuthSecret = @"BTBZMqHH6r4Tts7J_aSIgg";
-        var authSecret = Base64UrlEncoder.DecodeBytes(AuthSecret);
+        var authSecret = Base64Url.DecodeFromChars(AuthSecret);
         Span<byte> prkkey = stackalloc byte[32]; // SHA256 output is 32 bytes
         HKDF.Extract(HashAlgorithmName.SHA256, key.GetPrivateKey(), authSecret, prkkey);
-        var prkKeyEncoded = Base64UrlEncoder.Encode([.. prkkey]);
+        var prkKeyEncoded = Base64Url.EncodeToString([.. prkkey]);
     }
 
     [TestMethod]
     public void TestSharedKeyGeneration()
     {
         var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
-        var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
+        var uaPublic = Base64Url.DecodeFromChars(UaPublic);
         var UaPrivate = @"q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94";
-        var uaPrivate = Base64UrlEncoder.DecodeBytes(UaPrivate);
+        var uaPrivate = Base64Url.DecodeFromChars(UaPrivate);
 
         var AsPublic = @"BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
-        var asPublic = Base64UrlEncoder.DecodeBytes(AsPublic);
+        var asPublic = Base64Url.DecodeFromChars(AsPublic);
         var AsPrivate = @"yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw";
-        var asPrivate = Base64UrlEncoder.DecodeBytes(AsPrivate);
+        var asPrivate = Base64Url.DecodeFromChars(AsPrivate);
 
         var expectedECDHSecret = @"kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs";
 
@@ -86,7 +87,7 @@ public class EncryptorTest
         // var uaKeyAS = Encryptor.CreateWithPublicKey(uaPublic);
         // var sharedSecretAS = asKeyAS.DeriveRawSecretAgreement(uaKeyAS.PublicKey);
         var sharedSecretAS = ECKeyHelper.GetECDiffieHellmanSharedKey(asPrivate, uaPublic);
-        var sharedSecretDecodedAS = Base64UrlEncoder.Encode(sharedSecretAS);
+        var sharedSecretDecodedAS = Base64Url.EncodeToString(sharedSecretAS);
 
         // - For a user agent:
         //   ecdh_secret = ECDH(ua_private, as_public)
@@ -94,7 +95,7 @@ public class EncryptorTest
         // var asKeyUA = Encryptor.CreateWithPublicKey(asPublic);
         // var sharedSecretUA = uaKeyUA.DeriveRawSecretAgreement(asKeyUA.PublicKey);
         var sharedSecretUA = ECKeyHelper.GetECDiffieHellmanSharedKey(uaPrivate, asPublic);
-        var sharedSecretDecodedUA = Base64UrlEncoder.Encode(sharedSecretUA);
+        var sharedSecretDecodedUA = Base64Url.EncodeToString(sharedSecretUA);
 
         // EXPECTED ecdh_secret: kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs
         Assert.AreEqual(expectedECDHSecret, sharedSecretDecodedUA);
@@ -107,13 +108,13 @@ public class EncryptorTest
     {
         var ephemeralEcdh = ECKeyHelper.GenerateKeys();
         var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
-        var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
+        var uaPublic = Base64Url.DecodeFromChars(UaPublic);
         var UaPrivate = @"q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94";
-        var uaPrivate = Base64UrlEncoder.DecodeBytes(UaPrivate);
+        var uaPrivate = Base64Url.DecodeFromChars(UaPrivate);
         var sharedSecretAS = ECKeyHelper.GetECDiffieHellmanSharedKey(ephemeralEcdh.GetPrivateKey(), uaPublic);
-        var sharedSecretDecodedAS = Base64UrlEncoder.Encode(sharedSecretAS);
+        var sharedSecretDecodedAS = Base64Url.EncodeToString(sharedSecretAS);
         var sharedSecretUA = ECKeyHelper.GetECDiffieHellmanSharedKey(uaPrivate, ephemeralEcdh.GetPublicKey());
-        var sharedSecretDecodedUA = Base64UrlEncoder.Encode(sharedSecretUA);
+        var sharedSecretDecodedUA = Base64Url.EncodeToString(sharedSecretUA);
         Assert.AreEqual(sharedSecretDecodedAS, sharedSecretDecodedUA);
     }
 
@@ -122,14 +123,14 @@ public class EncryptorTest
     {
         // see https://datatracker.ietf.org/doc/html/rfc8291#appendix-A
         var AuthSecret = @"BTBZMqHH6r4Tts7J_aSIgg";
-        var authSecret = Base64UrlEncoder.DecodeBytes(AuthSecret);
+        var authSecret = Base64Url.DecodeFromChars(AuthSecret);
 
         var EcdhSecret = @"kyrL1jIIOHEzg3sM2ZWRHDRB62YACZhhSlknJ672kSs";
-        var ecdhSecret = Base64UrlEncoder.DecodeBytes(EcdhSecret);
+        var ecdhSecret = Base64Url.DecodeFromChars(EcdhSecret);
 
         Span<byte> prkkey = stackalloc byte[32]; // SHA256 output is 32 bytes
         HKDF.Extract(HashAlgorithmName.SHA256, ecdhSecret, authSecret, prkkey);
-        var prkKeyEncoded = Base64UrlEncoder.Encode([.. prkkey]);
+        var prkKeyEncoded = Base64Url.EncodeToString([.. prkkey]);
         Assert.AreEqual(@"Snr3JMxaHVDXHWJn5wdC52WjpCtd2EIEGBykDcZW32k", prkKeyEncoded);
     }
 
@@ -143,20 +144,20 @@ public class EncryptorTest
         //  IKM = HMAC-SHA-256(PRK_key, key_info || 0x01)
 
         var UaPublic = @"BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
-        var uaPublic = Base64UrlEncoder.DecodeBytes(UaPublic);
+        var uaPublic = Base64Url.DecodeFromChars(UaPublic);
         var AsPublic = @"BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
-        var asPublic = Base64UrlEncoder.DecodeBytes(AsPublic);
+        var asPublic = Base64Url.DecodeFromChars(AsPublic);
 
         byte[] keyInfo = [.. Encoding.UTF8.GetBytes("WebPush: info"), 0x00, .. uaPublic, .. asPublic];
-        var keyInfoDecoded = Base64UrlEncoder.Encode(keyInfo);
+        var keyInfoDecoded = Base64Url.EncodeToString(keyInfo);
         Assert.AreEqual(@"V2ViUHVzaDogaW5mbwAEJXGyvs3942BVGq8e0PTNNmwRzr5VX4m8t7GGpTM5FzFo7OLr4BhZe9MEebhuPI-OztV3ylkYfpJGmQ22ggCLDgT-M_SrDepxkU21WCP3O1SUj0EwbZIHMtu5pZpTKGSCIA5Zent7wmC6HCJ5mFgJkuk5cwAvMBKiiujwa7t45ewP", keyInfoDecoded);
 
         var PrkKey = @"Snr3JMxaHVDXHWJn5wdC52WjpCtd2EIEGBykDcZW32k";
         // var Prk = @"09_eUZGrsvxChDCGRCdkLiDXrReGOEVeSCdCcPBSJSc";
-        var prkKey = Base64UrlEncoder.DecodeBytes(PrkKey);
+        var prkKey = Base64Url.DecodeFromChars(PrkKey);
         Span<byte> ikm = stackalloc byte[32];
         HKDF.Expand(HashAlgorithmName.SHA256, prkKey, ikm, keyInfo);
-        var ikmEncoded = Base64UrlEncoder.Encode([.. ikm]);
+        var ikmEncoded = Base64Url.EncodeToString([.. ikm]);
         Assert.AreEqual(@"S4lYMb_L0FxCeq0WhDx813KgSYqU26kOyzWUdsXYyrg", ikmEncoded);
         // IKM: S4lYMb_L0FxCeq0WhDx813KgSYqU26kOyzWUdsXYyrg
     }
@@ -168,14 +169,14 @@ public class EncryptorTest
         // # HKDF-Extract(salt, IKM)
         //   PRK = HMAC-SHA-256(salt, IKM)
         var IKM = @"S4lYMb_L0FxCeq0WhDx813KgSYqU26kOyzWUdsXYyrg";
-        var ikm = Base64UrlEncoder.DecodeBytes(IKM);
+        var ikm = Base64Url.DecodeFromChars(IKM);
 
         var Salt = @"DGv6ra1nlYgDCS1FRnbzlw";
-        var salt = Base64UrlEncoder.DecodeBytes(Salt);
+        var salt = Base64Url.DecodeFromChars(Salt);
 
         Span<byte> prk = stackalloc byte[32];
         HKDF.Extract(HashAlgorithmName.SHA256, ikm, salt, prk);
-        var prkEncoded = Base64UrlEncoder.Encode([.. prk]);
+        var prkEncoded = Base64Url.EncodeToString([.. prk]);
         Assert.AreEqual(@"09_eUZGrsvxChDCGRCdkLiDXrReGOEVeSCdCcPBSJSc", prkEncoded);
         // PRK: 09_eUZGrsvxChDCGRCdkLiDXrReGOEVeSCdCcPBSJSc
     }
@@ -188,14 +189,14 @@ public class EncryptorTest
         //   cek_info = "Content-Encoding: aes128gcm" || 0x00
         //   CEK = HMAC-SHA-256(PRK, cek_info || 0x01)[0..15]
         var Prk = @"09_eUZGrsvxChDCGRCdkLiDXrReGOEVeSCdCcPBSJSc";
-        var prk = Base64UrlEncoder.DecodeBytes(Prk);
+        var prk = Base64Url.DecodeFromChars(Prk);
         byte[] cekInfo = [.. Encoding.UTF8.GetBytes("Content-Encoding: aes128gcm"), 0x00];
-        var cekInfoDecoded = Base64UrlEncoder.Encode(cekInfo);
+        var cekInfoDecoded = Base64Url.EncodeToString(cekInfo);
         Assert.AreEqual(@"Q29udGVudC1FbmNvZGluZzogYWVzMTI4Z2NtAA", cekInfoDecoded);
         // cek_info: Q29udGVudC1FbmNvZGluZzogYWVzMTI4Z2NtAA
         Span<byte> cek = stackalloc byte[16];
         HKDF.Expand(HashAlgorithmName.SHA256, prk, cek, cekInfo);
-        var keyEncoded = Base64UrlEncoder.Encode([.. cek]);
+        var keyEncoded = Base64Url.EncodeToString([.. cek]);
         // CEK: oIhVW04MRdy2XN9CiKLxTg
         Assert.AreEqual(@"oIhVW04MRdy2XN9CiKLxTg", keyEncoded);
     }
@@ -208,14 +209,14 @@ public class EncryptorTest
         //   nonce_info = "Content-Encoding: nonce" || 0x00
         //   NONCE = HMAC-SHA-256(PRK, nonce_info || 0x01)[0..11]
         var Prk = @"09_eUZGrsvxChDCGRCdkLiDXrReGOEVeSCdCcPBSJSc";
-        var prk = Base64UrlEncoder.DecodeBytes(Prk);
+        var prk = Base64Url.DecodeFromChars(Prk);
         byte[] nonceInfo = [.. Encoding.UTF8.GetBytes("Content-Encoding: nonce"), 0x00];
-        var nonceInfoDecoded = Base64UrlEncoder.Encode(nonceInfo);
+        var nonceInfoDecoded = Base64Url.EncodeToString(nonceInfo);
         Assert.AreEqual(@"Q29udGVudC1FbmNvZGluZzogbm9uY2UA", nonceInfoDecoded);
         // cek_info: Q29udGVudC1FbmNvZGluZzogYWVzMTI4Z2NtAA
         Span<byte> nonce = stackalloc byte[12];
         HKDF.Expand(HashAlgorithmName.SHA256, prk, nonce, nonceInfo);
-        var nonceEncoded = Base64UrlEncoder.Encode([.. nonce]);
+        var nonceEncoded = Base64Url.EncodeToString([.. nonce]);
         // NONCE: 4h_95klXJ5E_qnoN
         Assert.AreEqual(@"4h_95klXJ5E_qnoN", nonceEncoded);
     }
@@ -225,16 +226,16 @@ public class EncryptorTest
     {
         // https://datatracker.ietf.org/doc/html/rfc8188#section-2.1
         var Salt = @"DGv6ra1nlYgDCS1FRnbzlw";
-        var salt = Base64UrlEncoder.DecodeBytes(Salt);
+        var salt = Base64Url.DecodeFromChars(Salt);
         // The salt, record size of 4096, and application server public key produce an 86-octet header
         // salt (16byte) 4096 application server public key (65byte)
         var AsPublic = @"BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
-        var asPublic = Base64UrlEncoder.DecodeBytes(AsPublic);
+        var asPublic = Base64Url.DecodeFromChars(AsPublic);
         var maxContentLength = BitConverter.GetBytes(Convert.ToInt32(4096));
         if (BitConverter.IsLittleEndian) { Array.Reverse(maxContentLength); }
         var asPublicLength = Convert.ToByte(asPublic.Length);
         byte[] header = [.. salt, .. maxContentLength, asPublicLength, .. asPublic];
-        var headerEncoded = Base64UrlEncoder.Encode(header);
+        var headerEncoded = Base64Url.EncodeToString(header);
         Assert.AreEqual(@"DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8", headerEncoded);
         // DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8
     }
@@ -246,7 +247,7 @@ public class EncryptorTest
         var Payload = @"When I grow up, I want to be a watermelon";
         var payload = Encoding.UTF8.GetBytes(Payload);
         // var padded = Encryptor.AddPaddingToInput([.. payload]);
-        var paddedPayload = Base64UrlEncoder.Encode([.. payload, 0x02]);
+        var paddedPayload = Base64Url.EncodeToString([.. payload, 0x02]);
         Assert.AreEqual(@"V2hlbiBJIGdyb3cgdXAsIEkgd2FudCB0byBiZSBhIHdhdGVybWVsb24C", paddedPayload);
     }
 
@@ -254,22 +255,22 @@ public class EncryptorTest
     public void Test7_ContentEncryption()
     {
         var Nonce = @"4h_95klXJ5E_qnoN";
-        var nonce = Base64UrlEncoder.DecodeBytes(Nonce);
+        var nonce = Base64Url.DecodeFromChars(Nonce);
         var Cek = @"oIhVW04MRdy2XN9CiKLxTg";
-        var cek = Base64UrlEncoder.DecodeBytes(Cek);
+        var cek = Base64Url.DecodeFromChars(Cek);
         var PaddedPayload = @"V2hlbiBJIGdyb3cgdXAsIEkgd2FudCB0byBiZSBhIHdhdGVybWVsb24C";
-        var paddedPayload = Base64UrlEncoder.DecodeBytes(PaddedPayload);
+        var paddedPayload = Base64Url.DecodeFromChars(PaddedPayload);
 
         var cipherText = Encryptor.EncryptMessage(paddedPayload, cek, nonce);
         // Ciphertext: 8pfeW0KbunFT06SuDKoJH9Ql87S1QUrdirN6GcG7sFz1y1sqLgVi1VhjVkHsUoEsbI_0LpXMuGvnzQ
-        var cipherTextEncoded = Base64UrlEncoder.Encode(cipherText);
+        var cipherTextEncoded = Base64Url.EncodeToString(cipherText);
         Assert.AreEqual(@"8pfeW0KbunFT06SuDKoJH9Ql87S1QUrdirN6GcG7sFz1y1sqLgVi1VhjVkHsUoEsbI_0LpXMuGvnzQ", cipherTextEncoded);
 
         var Header = @"DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
-        var header = Base64UrlEncoder.DecodeBytes(Header);
+        var header = Base64Url.DecodeFromChars(Header);
 
         byte[] content = [.. header, .. cipherText];
-        var contentEncoded = Base64UrlEncoder.Encode(content);
+        var contentEncoded = Base64Url.EncodeToString(content);
         Assert.AreEqual(@"DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN", contentEncoded);
     }
 

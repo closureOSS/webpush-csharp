@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using System.Buffers.Text;
 
 namespace WebPush.Model;
 
@@ -10,11 +10,11 @@ public sealed class EncryptionResult
 
     public string Base64EncodePublicKey()
     {
-        return Base64UrlEncoder.Encode(PublicKey);
+        return Base64Url.EncodeToString(PublicKey);
     }
 
     public string Base64EncodeSalt()
     {
-        return Base64UrlEncoder.Encode(Salt);
+        return Base64Url.EncodeToString(Salt);
     }
 }

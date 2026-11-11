@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -58,7 +59,7 @@ public static class VapidHelper
             ValidateExpiration(expiration);
         }
 
-        var key = ECKeyHelper.GetKeyPair(Base64UrlEncoder.DecodeBytes(privateKey), Base64UrlEncoder.DecodeBytes(publicKey));
+        var key = ECKeyHelper.GetKeyPair(Base64Url.DecodeFromChars(privateKey), Base64Url.DecodeFromChars(publicKey));
         var identity = new ClaimsIdentity([new Claim(JwtRegisteredClaimNames.Sub, subject)]);
         var handler = new JsonWebTokenHandler
         {
@@ -124,7 +125,7 @@ public static class VapidHelper
             throw new ArgumentException(@"Valid public key not set", nameof(publicKey));
         }
 
-        var decodedPublicKey = Base64UrlEncoder.DecodeBytes(publicKey);
+        var decodedPublicKey = Base64Url.DecodeFromChars(publicKey);
 
         if (decodedPublicKey.Length != 65)
         {
@@ -139,7 +140,7 @@ public static class VapidHelper
             throw new ArgumentException(@"Valid private key not set", nameof(privateKey));
         }
 
-        var decodedPrivateKey = Base64UrlEncoder.DecodeBytes(privateKey);
+        var decodedPrivateKey = Base64Url.DecodeFromChars(privateKey);
 
         if (decodedPrivateKey.Length != 32)
         {

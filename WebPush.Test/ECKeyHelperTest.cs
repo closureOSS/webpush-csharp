@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using Microsoft.IdentityModel.Tokens;
+﻿using System.Buffers.Text;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WebPush.Util;
 
@@ -46,8 +46,8 @@ public class ECKeyHelperTest
     [TestMethod]
     public void TestGetPrivateKey()
     {
-        var privateKey = Base64UrlEncoder.DecodeBytes(TestPrivateKey);
-        var publicKey = Base64UrlEncoder.DecodeBytes(TestPublicKey);
+        var privateKey = Base64Url.DecodeFromChars(TestPrivateKey);
+        var publicKey = Base64Url.DecodeFromChars(TestPublicKey);
         var keypair = ECKeyHelper.GetKeyPair(privateKey, publicKey);
 
         var importedPrivateKey = keypair.GetEncodedPrivateKey();
@@ -60,8 +60,8 @@ public class ECKeyHelperTest
     [TestMethod]
     public void TestGetPublicKey()
     {
-        var privateKey = Base64UrlEncoder.DecodeBytes(TestPrivateKey);
-        var publicKey = Base64UrlEncoder.DecodeBytes(TestPublicKey);
+        var privateKey = Base64Url.DecodeFromChars(TestPrivateKey);
+        var publicKey = Base64Url.DecodeFromChars(TestPublicKey);
         var keypair = ECKeyHelper.GetKeyPair(privateKey, publicKey);
 
         var importedPublicKey = keypair.GetEncodedPublicKey();
@@ -74,8 +74,8 @@ public class ECKeyHelperTest
     [TestMethod]
     public void TestGetKeyPairNet()
     {
-        var privateKey = Base64UrlEncoder.DecodeBytes(TestPrivateKey);
-        var publicKey = Base64UrlEncoder.DecodeBytes(TestPublicKey);
+        var privateKey = Base64Url.DecodeFromChars(TestPrivateKey);
+        var publicKey = Base64Url.DecodeFromChars(TestPublicKey);
 
         var keypair = ECKeyHelper.GetKeyPair(privateKey, publicKey);
 
